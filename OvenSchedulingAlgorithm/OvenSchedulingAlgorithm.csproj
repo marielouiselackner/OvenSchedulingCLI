@@ -1,0 +1,89 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp3</TargetFrameworks>
+    <RootNamespace>OvenSchedulingAlgorithm</RootNamespace>
+    <AssemblyName>OvenSchedulingAlgorithm</AssemblyName>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DocumentationFile>OvenSchedulingAlgorithm.xml</DocumentationFile>
+    <AssemblyVersion>0.1.21</AssemblyVersion>
+    <VersionPrefix>0.1.21</VersionPrefix>
+    <VersionSuffix></VersionSuffix>
+    <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMdd_HHmmss"))</SourceRevisionId>
+    <Authors>MCP GmbH (mcpjpr, Marie-Louise Lackner)</Authors>
+    <Company>MCP GmbH</Company>
+    <Description>MCP Oven Scheduling Algorithm</Description>
+    <Copyright>Copyright © MCP GmbH 2020-$([System.DateTime]::UtcNow.Year)</Copyright>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <EmbedAllSources>true</EmbedAllSources>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>OvenSchedulingAlgorithm.snk</AssemblyOriginatorKeyFile>
+    <Nullable>annotations</Nullable>
+	<LangVersion>8.0</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <OutputPath>bin\Debug\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <OutputPath>bin\Release\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3|AnyCPU'">
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+	  <!--
+	  <PackageReference Include="MCP.CodeQuality" Version="1.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+	-->
+    <PackageReference Include="MCP.MetaheuristicsFramework" Version="1.0.21" />
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.SourceLink.Bitbucket.Git" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Converter\" />
+    <Folder Include="Algorithm\" />
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Objective\Implementation\Resources\ObjectiveWriterResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ObjectiveWriterResources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Objective\Implementation\Resources\ObjectiveWriterResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ObjectiveWriterResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <DocFileItem Remove="OvenSchedulingAlgorithm.xml" />
+  </ItemGroup>
+</Project>

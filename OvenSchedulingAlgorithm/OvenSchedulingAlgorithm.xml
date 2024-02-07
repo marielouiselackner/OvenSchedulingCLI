@@ -1,0 +1,2157 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>OvenSchedulingAlgorithm</name>
+    </assembly>
+    <members>
+        <member name="T:OvenSchedulingAlgorithm.Algorithm.AlgorithmFactory">
+            <summary>
+            An algorithm factory for the oven scheduling problem
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Algorithm.AlgorithmFactory.GetDefaultAlgorithm">
+            <summary>
+            Returns the default oven scheduling algorithm
+            </summary>
+            <returns>The default oven scheduling algorithm</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Algorithm.AlgorithmFactory.GetSimpleGreedyAlgorithm">
+            <summary>
+            Returns the Simple Greedy Algorithm for the oven scheduling problem
+            </summary>
+            <returns>The Simple Greedy oven scheduling algorithm</returns>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Algorithm.IAlgorithm">
+            <summary>
+            An oven scheduling algorithm
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Algorithm.IAlgorithm.Solve(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IAlgorithmConfig)">
+            <summary>
+            Trigger the algorithm with the given instance
+            </summary>
+            <param name="instance">The given instance</param>
+            <param name="algorithmConfig">Parameters of the algorithm</param>
+            <returns>The output of the algorithm</returns>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Algorithm.IAlgorithmFactory">
+            <summary>
+            An algorithm factory for the oven scheduling problem
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Algorithm.IAlgorithmFactory.GetDefaultAlgorithm">
+            <summary>
+            Returns the default oven scheduling algorithm
+            </summary>
+            <returns>The default oven scheduling algorithm</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Algorithm.IAlgorithmFactory.GetSimpleGreedyAlgorithm">
+            <summary>
+            Returns the Simple Greedy Algorithm for the oven scheduling problem
+            </summary>
+            <returns>The Simple Greedy oven scheduling algorithm</returns>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation.SimpleGreedyAlgorithm">
+            <summary>
+            Simple Greedy Algorithm interface that can be used to run a simple greedy heuristic
+             that finds an Oven Schedule using the given jobs, machines and attributes information
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation.SimpleGreedyAlgorithm.Solve(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IAlgorithmConfig)">
+            <summary>
+            Trigger the simple greedy algorithm with the given instance
+            </summary>
+            <param name="instance">The given instance</param>
+            <param name="algorithmConfig">Parameters of the algorithm (SerializeInputOutput and SerializeOutputDestination needed and mathematical model)</param>
+            <returns>The output of the algorithm</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation.SimpleGreedyAlgorithm.RunSimpleGreedy(OvenSchedulingAlgorithm.Interface.IInstance)">
+            <summary>
+            Find a solution of the oven scheduling problem using a simple greedy algorithm
+            </summary>
+            <param name="instance">instance of the oven scheduling problem</param>
+            <returns>solution of the oven scheduling problem</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation.SimpleGreedyAlgorithm.RunSimpleGreedySingleJob(OvenSchedulingAlgorithm.Interface.IInstance)">
+            <summary>
+            For an instance consisting of a single job, find a solution of the oven scheduling problem using the simple greedy algorithm
+            </summary>
+            <param name="instance">instance of the oven scheduling problem</param>
+            <returns>solution of the oven scheduling problem</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation.SimpleGreedyAlgorithm.GetCurrentShiftOnMachine(OvenSchedulingAlgorithm.Interface.IMachine,System.DateTime)">
+            <summary>
+            Given current time and a machine, find in which shift of the machine one currently is
+            </summary>
+            <param name="machine">Machine for which shift should be determined</param>
+            <param name="time">current time</param>
+            <returns>Index of current shift on machine</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation.SimpleGreedyAlgorithm.GetSetupTimes(System.Collections.Generic.IEnumerable{OvenSchedulingAlgorithm.Interface.IMachine},OvenSchedulingAlgorithm.Interface.IJob,System.Func{System.Int32,System.Int32},System.Collections.Generic.IDictionary{System.Int32,OvenSchedulingAlgorithm.Interface.IAttribute},System.Collections.Generic.IDictionary{System.Int32,OvenSchedulingAlgorithm.Interface.IBatchAssignment},System.Collections.Generic.IDictionary{System.Int32,System.Int32})">
+            <summary>
+             For a collection of machines and a job to be scheduled, find the setup costs that the job will incur on every one of the machines
+            </summary>
+            <param name="machines">Collection of machines</param>
+            <param name="job">Job to be scheduled</param>
+            <param name="convertedAttributeId">function that gets the converted attribute Ids of jobs (converted to integers 1...number of attributes)</param>
+            <param name="attributes">Dictionary of attributes</param>
+            <param name="lastBatchAssignmentOnMachine">Dictionary of last batch assignments (key = machineID)</param>
+            <param name="initStates">optional dictionary of initial states of machines</param>
+            <returns>Dictionary of setup times incurred (key = machineId)</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation.SimpleGreedyAlgorithm.FindBestMachine(System.Collections.Generic.IDictionary{System.Int32,System.Int32},System.DateTime,System.Collections.Generic.IEnumerable{OvenSchedulingAlgorithm.Interface.IMachine},System.Collections.Generic.IDictionary{System.Int32,System.ValueTuple{System.Int32,System.Boolean}},System.Int32)">
+            <summary>
+            Given a Dictionary of setup times for machines, find the machine with minimal setup time on which a job can be scheduled
+            </summary>
+            <param name="setupTimesForMachine">Dictionary of setup times incurred by scheduling the job to one of the machines (key = machineId)</param>
+            <param name="time">the current time</param>
+            <param name="machines">collection of machines</param>
+            <param name="processingTime">processing time of the job to be scheduled</param>
+            <returns></returns>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation.SimpleGreedyAlgorithm.FillBatch(System.Collections.Generic.IList{OvenSchedulingAlgorithm.Interface.IBatchAssignment},OvenSchedulingAlgorithm.Interface.IBatchAssignment,System.Int32,System.Int32,System.Collections.Generic.IDictionary{System.String,System.Int32},System.Int32,System.Collections.Generic.IList{OvenSchedulingAlgorithm.Interface.IJob},System.Int32)" -->
+        <member name="T:OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.ISimpleGreedyAlgorithm">
+            <summary>
+            Simple Greedy Algorithm interface that can be used to run a simple greedy heuristic
+             that finds an Oven Schedule using the given jobs, machines and attributes information
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.ISimpleGreedyAlgorithm.RunSimpleGreedy(OvenSchedulingAlgorithm.Interface.IInstance)">
+            <summary>
+            Find a solution of the oven scheduling problem using a simple greedy algorithm
+            </summary>
+            <param name="instance">instance of the oven scheduling problem</param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.ISimpleGreedyAlgorithm.RunSimpleGreedySingleJob(OvenSchedulingAlgorithm.Interface.IInstance)">
+            <summary>
+            For an instance consisting of a single job, find a solution of the oven scheduling problem using the simple greedy algorithm
+            </summary>
+            <param name="instance">instance of the oven scheduling problem</param>
+            <returns>solution of the oven scheduling problem</returns>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Converter.IMiniZincConverter">
+            <summary>
+            Converter that creates MiniZinc instance files from a given instance information
+            and converts back MiniZinc solution files to solutions of the original problem
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.IMiniZincConverter.ConvertToMiniZincInstance(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IWeightObjective,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Take an instance an convert it into a MiniZinc instance file content
+            </summary>
+            <param name="instance">The instance that should be converted</param>
+            <param name="weights">Weights of the components of the objective function that should be used by the minizinc solver</param>
+            <param name="convertToCPOptimizer">Optional boolean indicating whether insatnce should be converted to CP Optimizer instance instead of minizinc instance</param>
+            <param name="extraZerosSetup">Optional boolean indicating whether extra zeroes should be added to the matrix of setup times and costs</param>
+            <param name="specialCaseLexicographicOptimization">Optional boolean indicating whether weights should be created for the case of lexicographic minimization 
+            with total oven runtime lexicographically more important than tardiness, 
+            tardiness lexicographically more important than setup costs.</param>
+            <returns>Return the MiniZinc instance file contents as a string</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.IMiniZincConverter.ConvertToMiniZincPartialSolution(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput)">
+            <summary>
+            Take a partial solution and convert it into a MiniZinc additional instance file content
+            </summary>
+            /// <param name="instance">The instance for which the partial solution was created</param>
+            <param name="partialSolution">The patial solution that should be converted</param>
+            <returns>Return the MiniZinc partial solution instance file contents as a string</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.IMiniZincConverter.ConvertToMiniZincWarmStartData(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput,System.Boolean)">
+            <summary>
+            Take a (partial) initial solution and convert it into a MiniZinc additional instance file content
+            which van be used for warm start in MiniZinc
+            </summary>
+            /// <param name="instance">The instance for which the partial solution was created</param>
+            <param name="partialSolution">The partial solution that should be converted</param>
+            <param name="reprJobPerBatch">Optional parameter indictaing whether the warm start data is created for a 
+            minizinc model with a representative job per batch</param>
+            <returns>Return the MiniZinc warm start data file contents as a string</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.IMiniZincConverter.ConvertToMiniZincWeights(OvenSchedulingAlgorithm.Interface.IWeightObjective)">
+            <summary>
+            Create content of a MiniZinc weights file from weights of the objective function
+            </summary>
+            <param name="weights">The weights that should be used</param>
+            <returns>Return the MiniZinc weights file contents as a string</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.IMiniZincConverter.ConvertMiniZincSolutionFile(OvenSchedulingAlgorithm.Interface.IInstance,System.String)">
+            <summary>
+            Convert a given MiniZinc solution file into an OvenScheduling Object
+            </summary>
+            <param name="instance">Instance information associated to the solution</param>
+            <param name="solutionFileContents">The contents of the solution file that should be parsed as a string</param>
+            <returns>Creates output consisting of a list of converted batches 
+            and list of converted batch assignments for each job (if no solution could be found, the output will be empty).</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.IMiniZincConverter.ConvertMachineIdToMinizinc(System.Collections.Generic.IDictionary{System.Int32,OvenSchedulingAlgorithm.Interface.IMachine})">
+            <summary>
+            Takes a dictionary of machines and returns a function that converts machine IDs to corresponding machine IDs in MiniZinc
+            (for MiniZinc instance, machines need to be numbered from 1 to m,
+            general Ids are distinct integers in an arbitrary range.
+            therefore: machine with smallest Id gets number 1, machine with next smallest number 2 etc.)
+            </summary>
+            <param name="machines">The dictionary of machines for which conversion function is created</param>
+            <returns>Return the function that converts Machine Ids to Minizinc Ids </returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.IMiniZincConverter.ConvertMinizincMachineIdToId(System.Collections.Generic.IDictionary{System.Int32,OvenSchedulingAlgorithm.Interface.IMachine})">
+            <summary>
+            Takes a dictionary of machines and returns a function that converts MiniZinc machine IDs to corresponding original machine IDs
+            (for MiniZinc instance, machines are numbered from 1 to m, 
+            general Ids are distinct integers in an arbitrary range)
+            </summary>
+            <param name="machines">The dictionary of machines for which conversion function is created</param>
+            <returns>Return the function that converts Minizinc Ids to Machine Ids </returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.IMiniZincConverter.ConvertAttributeIdToMinizinc(System.Collections.Generic.IDictionary{System.Int32,OvenSchedulingAlgorithm.Interface.IAttribute})">
+            <summary>
+            Takes a dictionary of attributes and returns a function that converts attribute IDs to corresponding attribute IDs in MiniZinc
+            (for MiniZinc instance, attributes need to be numbered from 1 to a,
+            general Ids are distinct integers in an arbitrary range.
+            therefore: attribute with smallest Id gets number 1, attribute with next smallest number 2 etc.)
+            </summary>
+            <param name="attributes">The dictionary of attributes for which conversion function is created</param>
+            <returns>Return the function that converts Attribute Ids to Minizinc Ids </returns>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter">
+            <summary>
+            Converter that creates MiniZinc instance files from a given instance information
+            and converts back MiniZinc solution files to solutions of the original problem.
+            (Note that MiniZinc uses times in minutes rather than in seconds)
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.ConvertMachineIdToMinizinc(System.Collections.Generic.IDictionary{System.Int32,OvenSchedulingAlgorithm.Interface.IMachine})">
+            <summary>
+            Takes a dictionary of machines and returns a function that converts machine IDs to corresponding machine IDs in MiniZinc
+            (for MiniZinc instance, machines need to be numbered from 1 to m,
+            general Ids are distinct integers in an arbitrary range.
+            therefore: machine with smallest Id gets number 1, machine with next smallest number 2 etc.)
+            </summary>
+            <param name="machines">The dictionary of machines for which conversion function is created</param>
+            <returns>Return the function that converts Machine Ids to Minizinc Ids </returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.ConvertMinizincMachineIdToId(System.Collections.Generic.IDictionary{System.Int32,OvenSchedulingAlgorithm.Interface.IMachine})">
+            <summary>
+            Takes a dictionary of machines and returns a function that converts MiniZinc machine IDs to corresponding original machine IDs
+            (for MiniZinc instance, machines are numbered from 1 to m, 
+            general Ids are distinct integers in an arbitrary range)
+            </summary>
+            <param name="machines">The dictionary of machines for which conversion function is created</param>
+            <returns>Return the function that converts Minizinc Ids to Machine Ids </returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.ConvertJobIdToMinizinc(System.Collections.Generic.IList{OvenSchedulingAlgorithm.Interface.IJob})">
+            <summary>
+            Takes a list of jobs and returns a function that converts job IDs to corresponding job IDs in MiniZinc
+            (for MiniZinc instance, jobs need to be numbered from 1 to n,
+            general Ids are distinct integers in an arbitrary range.
+            therefore: job with smallest Id gets number 1, job with next smallest number 2 etc.)
+            </summary>
+            <param name="jobs">The list of jobs for which conversion function is created</param>
+            <returns>Return the function that converts Job Ids to Minizinc Ids </returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.ConvertAttributeIdToMinizinc(System.Collections.Generic.IDictionary{System.Int32,OvenSchedulingAlgorithm.Interface.IAttribute})">
+            <summary>
+            Takes a dictionary of attributes and returns a function that converts attribute IDs to corresponding attribute IDs in MiniZinc
+            (for MiniZinc instance, attributes need to be numbered from 1 to a,
+            general Ids are distinct integers in an arbitrary range.
+            therefore: attribute with smallest Id gets number 1, attribute with next smallest number 2 etc.)
+            </summary>
+            <param name="attributes">The dictionary of attributes for which conversion function is created</param>
+            <returns>Return the function that converts Attribute Ids to Minizinc Ids </returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.ConvertMinizincAttributeIdToId(System.Collections.Generic.IDictionary{System.Int32,OvenSchedulingAlgorithm.Interface.IAttribute})">
+            <summary>
+            Takes a dictionary of attributes and returns a function that converts MiniZinc attributes IDs to corresponding original attribute IDs
+            (for MiniZinc instance, attributes are numbered from 1 to a, 
+            general Ids are distinct integers in an arbitrary range)
+            </summary>
+            <param name="attributes">The dictionary of attributes for which conversion function is created</param>
+            <returns>Return the function that converts Minizinc Ids to Attribute Ids </returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.DropMillisecondsTimespan(System.TimeSpan)">
+            <summary>
+            Drops the milliseconds part of a TimeSpan
+            </summary>
+            <param name="timespan">timespan from which milliseconds should be dropped</param>
+            <returns>timespan without milliseconds</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.DropMillisecondsDatetime(System.DateTime)">
+            <summary>
+            Drops the milliseconds part of a DateTime
+            </summary>
+            <param name="datetime">datetime from which milliseconds should be dropped</param>
+            <returns>datetime without milliseconds</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.RoundUpFromSecondsToMinutes(System.Int32)">
+            <summary>
+            Convert time in seconds to time in minutes and round up (if not intgral)
+            </summary>
+            <param name="sec">time in seconds</param>
+            <returns>time in entire minutes</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.getEligibleMachines(System.Collections.Generic.IList{OvenSchedulingAlgorithm.Interface.IJob},System.Collections.Generic.IDictionary{System.Int32,OvenSchedulingAlgorithm.Interface.IMachine})">
+            <summary>
+            From the list of jobs and the dictionary of all machines, get the dictionary of machines that are eligible for some job
+            (in minizinc, we do not want to have any machines that are not eligible for any job
+            as this creates satisfiability problems)
+            </summary>
+            <param name="jobs">List of jobs</param>
+            <param name="machines">Dictionary of machines</param>
+            <returns>Dictionary of eligible machines</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.ConvertToMiniZincInstance(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IWeightObjective,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Take an instance and convert it into a MiniZinc instance file content
+            </summary>
+            <param name="instance">The instance that should be converted</param>
+            <param name="weights">Weights of the components of the objective function that should be used by the minizinc solver</param>
+            <param name="convertToCPOptimizer">Optional boolean indicating whether insatnce should be converted to CP Optimizer instance instead of minizinc instance</param>
+            <param name="extraZerosSetup">Optional boolean indicating whether extra zeroes should be added to the matrix of setup times and costs</param>
+            <param name="specialCaseLexicographicOptimization">Optional boolean indicating whether weights should be created for the case of lexicographic minimization 
+            with total oven runtime lexicographically more important than tardiness, 
+            tardiness lexicographically more important than setup costs.</param>
+            <returns>Return the MiniZinc instance file contents as a string</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.ConvertToMiniZincPartialSolution(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput)">
+            <summary>
+            Take a partial solution and convert it into a MiniZinc additional instance file content
+            which van be used for LNS
+            </summary>
+            /// <param name="instance">The instance for which the partial solution was created</param>
+            <param name="partialSolution">The partial solution that should be converted</param>
+            <returns>Return the MiniZinc partial solution instance file contents as a string</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.ConvertToMiniZincWarmStartData(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput,System.Boolean)">
+            <summary>
+            Take a (partial) initial solution and convert it into a MiniZinc additional instance file content
+            which van be used for warm start in MiniZinc
+            Note: The produced data is correct but minizinc does not seem to be capable of handling partial input
+            </summary>
+            /// <param name="instance">The instance for which the partial solution was created</param>
+            <param name="partialSolution">The partial solution that should be converted</param>
+            <param name="reprJobPerBatch">Optional parameter indictaing whether the warm start data is created for a 
+            minizinc model with a representative job per batch</param>
+            <returns>Return the MiniZinc warm start data file contents as a string</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.ConvertToMiniZincWeights(OvenSchedulingAlgorithm.Interface.IWeightObjective)">
+            <summary>
+            Create content of a MiniZinc weights file from weights of the objective function
+            </summary>
+            <param name="weights">The weights that should be used</param>
+            <returns>Return the MiniZinc weights file contents as a string</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.ConvertMiniZincSolutionFile(OvenSchedulingAlgorithm.Interface.IInstance,System.String)">
+            <summary>
+            Convert a given MiniZinc solution file into an OvenScheduling Object
+            </summary>
+            <param name="instance">Instance information associated to the solution</param>
+            <param name="solutionFileContents">The contents of the solution file that should be parsed as a string</param>
+            <returns>Creates output consisting of a list of converted batch assignments 
+            (if no solution could be found, the output will be empty).</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceChecker.BasicSatisfiabilityChecker.CheckSatisfiability(OvenSchedulingAlgorithm.Interface.IInstance,System.String)">
+            <summary>
+            Perform a basic satisfiability test on the given instance:
+            check whether all individual jobs can be scheduled 
+            and whether they can finish before their latest end date
+            and write info about jobs that cannot be scheduled to file
+            </summary>
+            <param name="instance">the given instance</param>
+            <param name="logFilePath">optional parameter: the given path of the logfile</param>
+            <returns>true if instance succesfully passed the satisfiability test (instance could still be unsatisfiable as a whole),
+            false if instance did not pass (unsatisfiability is guaranteed)</returns>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.InstanceName">
+            <summary>
+            The name of the instance
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.InstanceCreationDate">
+            <summary>
+            The time when the instance was created
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.NumberOfJobs">
+            <summary>
+            The total number of jobs in the instance
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.NumberOfMachines">
+            <summary>
+            The total number of machines in the instance
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.NumberOfAttributes">
+            <summary>
+            The total number of attributes in the instance
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.SetupTimeDictionary">
+            <summary>
+            The dictionary of setup times in seconds. 
+            Entry dict(ID1, ID2) = time means setuptime between batch of attribute with ID1 and batch of attribute with ID2 is equal to time.
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.SetupCostDictionary">
+            <summary>
+            The dictionary of setup costs. 
+            Entry dict(ID1, ID2) = cost means setupcost between batch of attribute with ID1 and batch of attribute with ID2 is equal to cost.
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.LengthSchedulingHorizon">
+            <summary>
+            The length of the scheduling horizon
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.UpperBoundTotalRuntimeSeconds">
+            <summary>
+            An upper bound (in seconds) for the cumulative runtime of all ovens 
+            (sum of all minimal processing times of jobs)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.UpperBoundTotalRuntimeMinutes">
+            <summary>
+            An upper bound (in minutes) for the cumulative runtime of all ovens 
+            if unit of time is minutes (ie all min processing times rounded up to next minute)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.MinMinTime">
+            <summary>
+            The minimum of all minimal processing times (in seconds)  
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.MinMinTimeMinutes">
+            <summary>
+            The minimum of all minimal processing times (in minutes)  
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.MaxMinTime">
+            <summary>
+            The maximum of all minimal processing times (in seconds)  
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.MaxMinTimeMinutes">
+            <summary>
+            The maximum of all minimal processing times (in minutes)  
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.MinEarliestStart">
+            <summary>
+            The overall earliest earliest start time of a job 
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.MinimalLatestEnd">
+            <summary>
+            The overall earliest latest end time of a job 
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.MaximalEarliestStart">
+            <summary>
+            The overall latest earliest start time of a job 
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.MaxSetupCost">
+            <summary>
+            The maximum of all setup costs  
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.MaxSetupTime">
+            <summary>
+            The maximum of all setup times (in seconds)  
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.MaxSetupTimeMinutes">
+            <summary>
+            The maximum of all setup times (in minutes)  
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.MaxNumberOfAvailabilityIntervals">
+            <summary>
+            The maximum number of availability intervals per machine
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.UpperBoundTDSJob">
+            <summary>
+            Upper bound for the TotalQuadraticDistanceToEarliestStartDate of a job (times in minutes)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.ConstantEStarForTDE">
+            <summary>
+            TimeSPan value of the constant eStar needed for the calculation of quadratic distance to latest end date (TDE)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.UpperBoundTDEJob">
+            <summary>
+            Upper bound for the TotalQuadraticDistanceToLatestEndDate  of a job (times in minutes)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.UpperBoundForIntegerObjective">
+            <summary>
+            Upper bound for the objective function when using an integer-valued objective
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.MultFactorTotalRuntime">
+            <summary>
+            Multiplicative factor for the cost component "Total Runtime" neede for the calculation of an integer-valued objective
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.MultFactorFinishedTooLate">
+            <summary>
+            Multiplicative factor for the cost component "FinishedTooLate" neede for the calculation of an integer-valued objective
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.MultFactorTotalSetupTimes">
+            <summary>
+            Multiplicative factor for the cost component "TotalSetupTimes" neede for the calculation of an integer-valued objective
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.MultFactorTotalSetupCosts">
+            <summary>
+            Multiplicative factor for the cost component "TotalSetupCosts" neede for the calculation of an integer-valued objective
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.PassedValidityCheck">
+            <summary>
+            Boolean indicating whether the instance passed the validity check
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.PassedSatisfiabilityCheck">
+            <summary>
+            Boolean indicating whether the instance passed a basic satisfiability check
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.LowerBoundTardyJobs">
+            <summary>
+            The number of jobs that will always finish late,
+            even if they are processed immediatly on the first available machine. 
+            This is a lower bound on the number of tardy jobs.
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceChecker.InstanceData.Serialize(System.String)">
+            <summary>
+            Serialize the instance to a json file
+            </summary>
+            <param name="fileName">Location of the serialized filed</param>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.LowerBoundBatchCount">
+            <summary>
+            Lower bound on the number of batches in any feasible solution
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.LowerBoundTotalRuntimeSeconds">
+            <summary>
+            A lower bound (in seconds) on the cumulative runtime of all ovens  for any feasible solution
+            (calculated via procedure for lower bounds)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.LowerBoundTotalRuntimeMinutes">
+            <summary>
+            A lower bound on the cumulative runtime of all ovens  for any feasible solution
+            (calculated via procedure for lower bounds)
+            if unit of time is minutes (ie rounded up to next minute)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.LowerBoundTotalSetupTimesSeconds">
+            <summary>
+            A lower bound (in seconds) on the cumulative setup times
+            (calculated via procedure for lower bounds)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.LowerBoundTotalSetupTimesMinutes">
+            <summary>
+            A lower bound on the cumulative setup times
+            (calculated via procedure for lower bounds)
+            if unit of time is minutes (ie rounded up to next minute)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.LowerBoundTotalSetupCosts">
+            <summary>
+            A lower bound on the cumulative setup costs
+            (calculated via procedure for lower bounds)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.LowerBoundTardyJobs">
+            <summary>
+            A lower bound on the number of tardy jobs
+            (calculated via procedure for lower bounds)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.LowerBoundIntObjective">
+            <summary>
+            A lower bound on the aggregated integer-valued
+            objective (value depends on the chosen weights)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.LowerBoundFloatObjective">
+            <summary>
+            A lower bound on the aggregated real-valued
+            objective (value depends on the chosen weights)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.UpperBoundAverageNumberOfJobsPerBatch">
+            <summary>
+            An upper bound on the average number of jobs per batch 
+            (given by (number of jobs)/(min number of batches)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.UpperBoundRuntimeReduction">
+            <summary>
+            An upper bound on the runtime reduction compared with running every job in a singel batch
+            (given by (sum of min time of jobs)/(lower bound total runtime)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.LowerBoundsCalculationTime">
+            <summary>
+            The time required to calculate all othe rproperties of a "LowerBounds.cs" object
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.Serialize(System.String)">
+            <summary>
+            Serialize the instance to a json file
+            </summary>
+            <param name="fileName">Location of the serialized filed</param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceChecker.LowerBoundsCalculator.CalculateLowerBounds(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.InstanceChecker.InstanceData,OvenSchedulingAlgorithm.Interface.IAlgorithmConfig)">
+            <summary>
+            Calculates lower bounds on the value of the objective function for a given instance
+            </summary>
+            <param name="instance">the given instance</param>
+            <param name="instanceData">the given instance data obtained from preprocessing</param>
+            <param name="config">algorithm configuration (contains weights, optionally initial states of machines)</param>
+            <param name=""></param>
+            <param name=""></param>
+            <param name=""></param>
+            <param name=""></param>
+            <returns></returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceChecker.LowerBoundsCalculator.CalculateSimpleLowerBoundSetupCost(OvenSchedulingAlgorithm.Interface.IInstance,System.Collections.Generic.List{System.ValueTuple{System.Int32,System.Collections.Generic.IList{System.Int32}}})">
+            <summary>
+            Given an instance together with a list of initial states of machines and a list of batches (with their eligible machines),
+            calculate lower bounds on the cumulative setup costs.
+            </summary>
+            <param name="instance">the given instance</param>
+            <param name="eligMachBatches">the list of batches to be scheduled (entries consist of an attribute Id
+            and a list of IDs of eligible machines; eligibale machines are not needed here)</param>
+            <returns></returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceChecker.LowerBoundsCalculator.CalculateMinBatchCountProcTime(OvenSchedulingAlgorithm.Interface.IInstance,System.Int32)">
+            <summary>
+            Calculate the minimum number of batches required and the minimum processing time of these batches for all jobs 
+            of a given instance that have a given attribute.
+            </summary>
+            <param name="instance"></param>
+            <param name="attributeId"></param>
+            <returns>The calculated minimum number of batches required, the calculated minimal processing time of batches,
+            and the list of batches together with their eligible machines.</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceChecker.LowerBoundsCalculator.GetBoundsSmallJobsEligMachines(System.Collections.Generic.IEnumerable{OvenSchedulingAlgorithm.Interface.IJob},System.Collections.Generic.IDictionary{System.Int32,OvenSchedulingAlgorithm.Interface.IMachine},System.Int32)">
+            <summary>
+            Given a set of small jobs, a dictionary of machines together with the overall max machine capacity, 
+            find the minimum number of batches required to schedule all jobs based on the eligible machines of the jobs.
+            For these batches, compute the minimal processing time as well.
+            </summary>
+            <param name="smallJobs"></param>
+            <param name="machines"></param>
+            <param name="maxCap"></param>
+            <returns>(minimum number of batches required, minimal batch processing time, list of eligible machines of batches)</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceChecker.LowerBoundsCalculator.GetBoundsSmallJobsCompProcTimes(System.Collections.Generic.IEnumerable{OvenSchedulingAlgorithm.Interface.IJob},System.Int32)">
+            <summary>
+            Given a set of small jobs, a dictionary of machines together with the overall max machine capacity, 
+            find the minimum number of batches required to schedule all jobs based on the minimal and maximal processing times of the jobs.
+            For these batches, compute the minimal processing time as well.
+            </summary>
+            <param name="smallJobs"></param>
+            <param name="machines"></param>
+            <param name="maxCap"></param>
+            <returns>(minimum number of batches required, minimal batch processing time)</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceChecker.Preprocessor.GCD(System.Int64,System.Int64)">
+            <summary>
+            Use Euclid's algorithm to calculate the greatest common divisor (GCD) of two numbers.
+            </summary>
+            <param name="a">the first number</param>
+            <param name="b">the second number</param>
+            <returns>GCD(a,b)</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceChecker.Preprocessor.LCM(System.Int64,System.Int64)">
+            <summary>
+            Return the least common multiple (LCM) of two numbers.
+            </summary>
+            <param name="a">the first number</param>
+            <param name="b">the second number</param>
+            <returns>LCM(a,b)</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceChecker.Preprocessor.LCM(System.Int64,System.Int64,System.Int64)">
+            <summary>
+            Return the least common multiple (LCM) of three numbers.
+            </summary>
+            <param name="a">the first number</param>
+            <param name="b">the second number</param>
+            <param name="c">the third number</param>
+            <returns>LCM(a,b,c)</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceChecker.Preprocessor.CalculateMinimalEarliestStart(OvenSchedulingAlgorithm.Interface.IInstance)">
+            <summary>
+            Calculate the minimal (=earliest) earliest start date of the instance     
+            </summary>
+            <returns>DateTime-value of the minimal earliest start date</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceChecker.Preprocessor.CalculateMinimalLatestEnd(OvenSchedulingAlgorithm.Interface.IInstance)">
+            <summary>
+            Calculate the minimal (=earliest) latest end date of the instance     
+            </summary>
+            <returns>DateTime-value of the minimal latest end date</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceChecker.Preprocessor.CalculateMaximalEarliestStart(OvenSchedulingAlgorithm.Interface.IInstance)">
+            <summary>
+            Calculate the maximal (=latest) earliest start date of the instance     
+            </summary>
+            <returns>DateTime-value of the maximal earliest start date</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceChecker.Preprocessor.CalculateConstantDistanceLatestEnd(OvenSchedulingAlgorithm.Interface.IInstance)">
+            <summary>
+            Calculate the TimeSPan value of the constant eStar needed for the quadratic distance to latest end date. 
+            </summary>
+            <returns>TimeSpan value of the the constant eStar</returns>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceGenerator">
+            <summary>
+            Generator that creates random oven scheduling instances given the specified parameters.
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceGenerator.GenerateInstance(OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters)">
+            <summary>
+            Create random instance
+            </summary> 
+            <returns>Randomly created instance with given parameters.</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceGenerator.CreateRandomSubInstance(OvenSchedulingAlgorithm.Interface.IInstance,System.Int32,System.Int32,System.Boolean,System.Boolean)">
+            <summary>
+            Given an instance of the Oven Schedulign problem, create a sub-instance with given number of jobs and machines by randomly picking elements of the instance
+            </summary>
+            <param name="instance">the given instance</param>
+            <param name="n"></param>
+            <param name="k"></param>
+            <param name="sameAttributeOnAllMachines">boolean indicating whether a job's attribute should be the same across all eligible machines</param>
+            <param name="initialStates">boolean indicating whether machines should have initial states</param>
+            <returns>Random sub-instance of the given instance</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceGenerator.CreateSubInstanceAttributes(System.Collections.Generic.IDictionary{System.Int32,OvenSchedulingAlgorithm.Interface.IAttribute},System.Collections.Generic.List{System.Int32})">
+            <summary>
+            Given a dictionary of attributes, construct the dictionary of attributes for those attributes appearing in a given list of attribute Ids
+            </summary>
+            <param name="attributes"></param>
+            <param name="attributeIds"></param>
+            <returns></returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceGenerator.PickMachineSubset(System.Int32,System.Collections.Generic.IDictionary{System.Int32,OvenSchedulingAlgorithm.Interface.IMachine},System.Random)">
+            <summary>
+            Given a dictionary of machines, pick a random subset of machines of given size
+            </summary>
+            <param name="k"></param>
+            <param name="machines"></param>
+            <param name="rand"></param>
+            <returns></returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceGenerator.CreateIntervalSubInstance(OvenSchedulingAlgorithm.Interface.IInstance,System.Int32,System.Int32,System.Boolean,System.Boolean)">
+            <summary>
+            Given an instance of the Oven Schedulign problem, create a sub-instance with given number of jobs and machines 
+            by picking elements of the instance so that the earliest start dates of jobs form an interval in the original instance
+            </summary>
+            <param name="instance">the given instance</param>
+            <param name="n"></param>
+            <param name="k"></param>
+            <param name="sameAttributeOnAllMachines">boolean indicating whether a job's attribute should be the same across all eligible machines</param>
+            <param name="initialStates"></param>
+            <returns>Random sub-instance of the given instance</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceGenerator.GenerateMinMaxProcessingTimes(System.Int32,System.Int32,System.Int32,System.Boolean,System.Random)">
+            <summary>
+            Randomly create lists of minimum and maximum processing times of jobs (in minutes)
+            </summary>
+            <param name="diff_times"></param>
+            <param name="p"></param>
+            <param name="n"></param>
+            <param name="max_time"></param>
+            <returns>List of minimum processing times, list of maximum processing times, overall maximum processing time</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceGenerator.GenerateMachineShifts(System.Int32,System.Int32,System.Int32,System.Double,System.DateTime,System.Int32,System.Random)">
+            <summary>
+            Randomly create lists of DateTimes availabilityStart and availabilityEnd for the start and end of on-shifts of a machine in an oven scheduling instance
+            </summary>
+            <param name="min_shift"></param>
+            <param name="max_shift"></param>
+            <param name="maxBatchPlusSetupTime"></param>
+            <param name="maxProcessingTime"></param>
+            <param name="availability_percentage"></param>
+            <param name="schedulingHorizonStart"></param>
+            <param name="schedulingHorizonLengthMinutes"></param>
+            <param name="rand"></param>
+            <returns>Lists of DateTimes availabilityStart and availabilityEnd</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceGenerator.GenerateSetupTimesOrCosts(System.Int32,OvenSchedulingAlgorithm.InstanceGenerator.SetupType,System.Int32,System.Random)">
+            <summary>
+            Create matrix of setup times or setup costs for random insatnce
+            </summary>
+            <param name="a">number of attributes</param>
+            <param name="setupType">which type of setup times/costs should be used</param>
+            <param name="p">maximum processing time of jobs (setup times should be between 0 and ceil(p/4) </param>
+            <param name="rand">random element</param>
+            <returns>Matrix of setup times or costs.</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceGenerator.runGreedy(OvenSchedulingAlgorithm.Interface.IInstance,System.Boolean)">
+            <summary>
+            Run Greedy algorithm to check whether all jobs can be assigned
+            </summary>
+            <param name="instance">instance to be solved</param>
+            <param name="solvableByGreedyOnly">boolean indicating whether we are only interested in solutions were greedy can assign all jobs. 
+            If false, greedy solution will always be serialized to file; if true, greedy solution is only serialized if all jobs were assigned. </param>
+            <returns>Number of jobs that were not assigned</returns>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.JobCount">
+            <summary>
+            The number of jobs
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.MachineCount">
+            <summary>
+            The number of machines
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.AttributeCount">
+            <summary>
+            The number of attributes
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.MaxProcTime">
+            <summary>
+            The overall maximum processing time (in minutes)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.DiffProcTimes">
+            <summary>
+            The number of different processing times among which to choose
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.ChooseMaxProcTime">
+            <summary>
+            Whether a maximum processing time should be chosen for every job or not
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.MaxJobSize">
+            <summary>
+            Maximum size of job
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.MaxCapLowerBound">
+            <summary>
+            Lower bound for the maximum capacity of machines
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.MaxCapUpperBound">
+            <summary>
+            Upper bound for the maximum capacity of machines
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.MinShiftCount">
+            <summary>
+            Minimum number of shifts per machine
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.MaxShiftCount">
+            <summary>
+            Maximum number of shifts per machine
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.AvailabilityPercentage">
+            <summary>
+            Lower bound for the fraction of time that every machine should be available - between 0 and 1.
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.EligibilityProba">
+            <summary>
+            Probability of an additional machine to be selected 
+            as eligible machine for a job (one machine will always be selected) - between 0 and 1.
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.Rho">
+            <summary>
+            Factor for the creation of earliest start dates - between 0 and 1.
+            If rho = 0, all jobs are available right at the beginning and as rho grows, the jobs are released over a longer interval.
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.Phi">
+            <summary>
+            Factor used for the creation of latest end dates - greater or equal to 1.
+            If phi = 1, the latest end time is equal to the sum of the earliest start time and the minimum processing time.
+            As phi grows, the latest end date can be further away from the earliest start date.
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.SetupCostType">
+            <summary>
+            Which type of setup costs should be used
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.SetupTimeType">
+            <summary>
+            Which type of setup times should be used.
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.SolvableByGreedyOnly">
+            <summary>
+            Boolean indicating whether instances that can not be solved by greedy heuristic should be thrown away.
+            If false, generated instance might be infeasible.
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.DifferentAttributesPerMachine">
+            <summary>
+            Boolean indicating whether jobs may have different attributes on different eligible machines.
+            If false, attributes of a job are the same on all eligible machines.
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.InitialStates">
+            <summary>
+            Boolean indicating whether initial states should be chosen for every machine.
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.#ctor(System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Boolean,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Double,System.Double,System.Double,System.Double,OvenSchedulingAlgorithm.InstanceGenerator.SetupType,OvenSchedulingAlgorithm.InstanceGenerator.SetupType,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Construct parameters for a random insatnce of the oven scheduling problem 
+            </summary>
+            <param name="jobCount"></param>
+            <param name="machineCount"></param>
+            <param name="attributeCount"></param>
+            <param name="maxProcTime"></param>
+            <param name="diffProcTimes"></param>
+            <param name="chooseMaxProcTime"></param>
+            <param name="maxJobSize"></param>
+            <param name="maxCapLowerBound"></param>
+            <param name="maxCapUpperBound"></param>
+            <param name="minShiftCount"></param>
+            <param name="maxShiftCount"></param>
+            <param name="availabilityPercentage"></param>
+            <param name="eligibilityProba"></param>
+            <param name="rho"></param>
+            <param name="phi"></param>
+            <param name="setupCostType"></param>
+            <param name="setupTimeType"></param>
+            <param name="solvableByGreedyOnly"></param>
+            <param name="differentAttributesPerMachine"></param>
+            <param name="initialStates"></param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.Serialize(System.String)">
+            <summary>
+            Serialize the parameters to a json file
+            </summary>
+            <param name="fileName">Location of the serialized filed</param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.DeserializeInstance(System.String)">
+            <summary>
+            Create random instance parameters based on a serialized Object
+            </summary>
+            <param name="fileName">File location storing the serialized instance.</param>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.InstanceGenerator.SetupType">
+            <summary>
+            Possible types for setup times and costs
+            </summary>
+        </member>
+        <member name="F:OvenSchedulingAlgorithm.InstanceGenerator.SetupType.none">
+            <summary>
+            no setup times or costs 
+            </summary>
+        </member>
+        <member name="F:OvenSchedulingAlgorithm.InstanceGenerator.SetupType.constant">
+            <summary>
+            constant setup times or costs 
+            </summary>
+        </member>
+        <member name="F:OvenSchedulingAlgorithm.InstanceGenerator.SetupType.arbitrary">
+            <summary>
+            purely random setup times or costs 
+            </summary>
+        </member>
+        <member name="F:OvenSchedulingAlgorithm.InstanceGenerator.SetupType.realistic">
+            <summary>
+            setup times or costs that are closer to reality 
+            </summary>
+        </member>
+        <member name="F:OvenSchedulingAlgorithm.InstanceGenerator.SetupType.symmetric">
+            <summary>
+            symmetric setup times or costs
+            </summary>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.IAlgorithmConfig">
+            <summary>
+            Parameters used to configure the oven scheduling algorithm
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IAlgorithmConfig.RunTimeLimit">
+            <summary>
+            Run time limit in milliseconds
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IAlgorithmConfig.SerializeInputOutput">
+            <summary>
+            Boolean flag that determines whether the input and output objects should be serialized
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IAlgorithmConfig.SerializeOutputDestination">
+            <summary>
+            The destination path where serialized input and output files should be stored.
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IAlgorithmConfig.WeightsObjective">
+            <summary>
+            Weights used in the normalised objective function
+            </summary>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.IAttribute">
+            <summary>
+            An attribute in an instance of the oven scheduling algorithm
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IAttribute.Id">
+            <summary>
+            The id of the attribute
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IAttribute.Name">
+            <summary>
+            The name of the attribute
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IAttribute.SetupCostsAttribute">
+            <summary>
+            The setup costs between this attribute and other attributes (list is sorted in increasing order of attribute IDs)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IAttribute.SetupTimesAttribute">
+            <summary>
+            The setup times (in seconds) between this attribute and other attributes (list is sorted in increasing order of attribute IDs)
+            </summary>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.IBatch">
+            <summary>
+            A batch in a solution of the oven scheduling algorithm
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IBatch.Id">
+            <summary>
+            The id of the batch
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IBatch.AssignedMachine">
+            <summary>
+            The machine the batch is assigned to
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IBatch.StartTime">
+            <summary>
+            The start time of the batch 
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IBatch.EndTime">
+            <summary>
+            The end time of the batch 
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IBatch.Attribute">
+            <summary>
+            The attribute of the batch 
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.IBatch.IsEqual(OvenSchedulingAlgorithm.Interface.IBatch)">
+            <summary>
+            Checks whether the batch is equal to another batch
+            <param name="otherBatch">Other batch</param>
+            </summary>        
+            <returns>True if the batches are the same.</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.IBatch.DeepCopy">
+            <summary>
+            Create a deep copy of the Batch
+            </summary>
+            <returns>A deep copy of the Batch</returns>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.IBatchAssignment">
+            <summary>
+            A batch assignment for a job
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IBatchAssignment.Job">
+            <summary>
+            The job the batch assignment is created for
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IBatchAssignment.AssignedBatch">
+            <summary>
+            The batch the job is assigned to
+            </summary>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.IInstance">
+            <summary>
+            An instance for the oven scheduling algorithm
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IInstance.CreationDate">
+            <summary>
+            The time when the instance was created
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IInstance.Machines">
+            <summary>
+            The dictionary of machines
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IInstance.InitialStates">
+            <summary>
+            The dictionary of initial state IDs for every machine; the keys are the machine IDs
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IInstance.Jobs">
+            <summary>
+            The list of jobs
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IInstance.Attributes">
+            <summary>
+            The dictionary of attributes, keys are attribute IDs
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IInstance.SchedulingHorizonStart">
+            <summary>
+            The start of the scheduling horizon as a reference date
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IInstance.SchedulingHorizonEnd">
+            <summary>
+            The end of the scheduling horizon 
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.IInstance.Serialize(System.String)">
+            <summary>
+            Serialize the instance to a json file
+            </summary>
+            <param name="fileName">Location of the serialized filed</param>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.IJob">
+            <summary>
+            A job in an instance of the oven scheduling algorithm
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IJob.Id">
+            <summary>
+            The id of the job
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IJob.Name">
+            <summary>
+            The name of the job
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IJob.EarliestStart">
+            <summary>
+            The earliest start time of the job
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IJob.LatestEnd">
+            <summary>
+            The latest end time (=deadline) of the job
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IJob.MinTime">
+            <summary>
+            The minimum time the job must spend in an oven (in seconds)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IJob.MaxTime">
+            <summary>
+            The maximum time the job may spend in an oven (in seconds)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IJob.Size">
+            <summary>
+            The size of the job 
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IJob.AttributeIdPerMachine">
+            <summary>
+            The dictionary of attribute IDs of the job for every eligible machine; the keys are the machine IDs
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IJob.EligibleMachines">
+            <summary>
+            List of IDs of eligible machines (jobs can only be processed on certain machines)
+            </summary>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.IMachine">
+            <summary>
+            A machine in an instance of the oven scheduling algorithm
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IMachine.Id">
+            <summary>
+            The id of the machine
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IMachine.Name">
+            <summary>
+            The name of the machine
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IMachine.MinCap">
+            <summary>
+            The minimum capacity of the machine
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IMachine.MaxCap">
+            <summary>
+            The maximum capacity of the machine
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IMachine.AvailabilityStart">
+            <summary>
+            List of start times of intervals where machine is available
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IMachine.AvailabilityEnd">
+            <summary>
+            List of end times of intervals where machine is available
+            </summary>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.Implementation.AlgorithmConfig">
+            <summary>
+            Parameters used to configure the oven scheduling algorithm
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.AlgorithmConfig.RunTimeLimit">
+            <summary>
+            Run time limit in milliseconds
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.AlgorithmConfig.SerializeInputOutput">
+            <summary>
+            Boolean flag that determines whether the input and output objects should be serialized
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.AlgorithmConfig.SerializeOutputDestination">
+            <summary>
+            The destination path where serialized input and output files should be stored.
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.AlgorithmConfig.WeightsObjective">
+            <summary>
+            Weights used in the normalised objective function
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.AlgorithmConfig.#ctor(System.Int32,System.Boolean,System.String,OvenSchedulingAlgorithm.Interface.IWeightObjective)">
+            <summary>
+            Create algorithm parameters for the oven scheduling algorithm
+            </summary>
+            <param name="runTimeLimit">Run time limit in milliseconds</param>
+            <param name="serializeInputOutput">Boolean flag that determines whether the input and output objects should be serialized</param>
+            <param name="serializeOutputDestination">The destination path where serialized input and output files should be stored</param>
+            <param name="weightsObjective">Weights used in the normalised objective function</param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.AlgorithmConfig.#ctor(OvenSchedulingAlgorithm.Interface.IAlgorithmConfig)">
+            
+             copy constructor
+            
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.Implementation.Attribute">
+            <summary>
+            An attribute in an instance of the oven scheduling algorithm
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Attribute.Id">
+            <summary>
+            The id of the attribute
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Attribute.Name">
+            <summary>
+            The name of the attribute
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Attribute.SetupCostsAttribute">
+            <summary>
+            The setup costs between this attribute and other attributes (list is sorted in increasing order of attribute IDs)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Attribute.SetupTimesAttribute">
+            <summary>
+            The setup times (in seconds) between this attribute and other attributes (list is sorted in increasing order of attribute IDs)
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Attribute.#ctor(System.Int32,System.String,System.Collections.Generic.IList{System.Int32},System.Collections.Generic.IList{System.Int32})">
+            <summary>
+            Create an attribute in an instance of the oven scheduling algorithm
+            </summary>
+            <param name="id">The id of the attribute</param>
+            <param name="name">The name of the attribute</param>
+            <param name="setupCostsAttribute">The setup costs between this attribute and other attributes (list is sorted in increasing order of attribute IDs)</param>
+            <param name="setupTimesAttribute">The setup times between this attribute and other attributes (list is sorted in increasing order of attribute IDs)</param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Attribute.#ctor(OvenSchedulingAlgorithm.Interface.IAttribute)">
+            
+             copy constructor
+            
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.Implementation.Batch">
+            <summary>
+            A batch in a solution of the oven scheduling algorithm
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Batch.Id">
+            <summary>
+            The id of the batch 
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Batch.AssignedMachine">
+            <summary>
+            The machine the batch is assigned to
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Batch.StartTime">
+            <summary>
+            The start time of the batch 
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Batch.EndTime">
+            <summary>
+            The end time of the batch 
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Batch.Attribute">
+            <summary>
+            The attribute of the batch 
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Batch.IsEqual(OvenSchedulingAlgorithm.Interface.IBatch)">
+            <summary>
+            Checks whether the batch is equal to another batch
+            <param name="otherBatch">Other batch</param>
+            </summary>        
+            <returns>True if the batches are the same.</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Batch.#ctor(System.Int32,OvenSchedulingAlgorithm.Interface.IMachine,System.DateTime,System.DateTime,OvenSchedulingAlgorithm.Interface.IAttribute)">
+            <summary>
+            Create a batch in a solution of the oven scheduling algorithm
+            </summary>
+            <param name="id">The id of the batch</param>
+            <param name="assignedMachine">The machine the batch is assigned to</param>
+            <param name="startTime">The start time of the batch</param>
+            <param name="endTime">The end time of the batch</param>
+            <param name="attribute">The attribute of the batch</param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Batch.DeepCopy">
+            <summary>
+            Create a deep copy of the Batch
+            </summary>
+            <returns>A deep copy of the Batch</returns>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.Implementation.BatchAssignment">
+            <summary>
+            A batch assignment for a job
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.BatchAssignment.Job">
+            <summary>
+            The job the batch assignment is created for
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.BatchAssignment.AssignedBatch">
+            <summary>
+            The batch the job is assigned to
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.BatchAssignment.#ctor(OvenSchedulingAlgorithm.Interface.IJob,OvenSchedulingAlgorithm.Interface.IBatch)">
+            <summary>
+            Create a batch assignment for a job
+            </summary>
+            <param name="job">The job the batch assignment is created for</param>
+            <param name="assignedBatch">The batch the job is assigned to</param>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.Implementation.Instance">
+            <summary>
+            An instance for the oven scheduling algorithm
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Instance.Name">
+            <summary>
+            The name of the instance
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Instance.CreationDate">
+            <summary>
+            The time when the instance was created
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Instance.Machines">
+            <summary>
+            The dictionary of machines
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Instance.InitialStates">
+            <summary>
+            The dictionary of initial state IDs for every machine; the keys are the machine IDs
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Instance.Jobs">
+            <summary>
+            The list of jobs 
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Instance.Attributes">
+            <summary>
+            The dictionary of attributes, keys are attribute IDs
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Instance.SchedulingHorizonStart">
+            <summary>
+            The start of the scheduling horizon as a reference date
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Instance.SchedulingHorizonEnd">
+            <summary>
+            The end of the scheduling horizon 
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Instance.#ctor(System.String,System.DateTime,System.Collections.Generic.IDictionary{System.Int32,OvenSchedulingAlgorithm.Interface.IMachine},System.Collections.Generic.IDictionary{System.Int32,System.Int32},System.Collections.Generic.IList{OvenSchedulingAlgorithm.Interface.IJob},System.Collections.Generic.IDictionary{System.Int32,OvenSchedulingAlgorithm.Interface.IAttribute},System.DateTime,System.DateTime)">
+            <summary>
+            Create an instance for the oven scheduling algorithm
+            </summary>
+            <param name="name">The name of the instance</param>
+            <param name="creationDate">The time when the instance was created</param>
+            <param name="machines">The dictionary of machines</param>
+            <param name="initialStates">The dictionary of initial states of machines</param>
+            <param name="jobs">The list of jobs</param>
+            <param name="attributes">The dictionary of attributes</param>
+            <param name="schedulingHorizonStart">The start of the scheduling horizon as a reference date</param>
+            <param name="schedulingHorizonEnd">The end of the scheduling horizon</param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Instance.Serialize(System.String)">
+            <summary>
+            Serialize the instance to a json file
+            </summary>
+            <param name="fileName">Location of the serialized filed</param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Instance.DeserializeInstance(System.String)">
+            <summary>
+            Create an instance based on a serialized Object
+            </summary>
+            <param name="fileName">File location storing the serialized instance.</param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Instance.#ctor(OvenSchedulingAlgorithm.Interface.IInstance)">
+            <summary>
+            Copy constructor
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Instance.#ctor(OvenSchedulingAlgorithm.Interface.IInstance,System.Collections.Generic.IList{System.Int32})">
+            <summary>
+            Create instance with initial States from an instance and a list of initial states
+            </summary>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.Implementation.Job">
+            <summary>
+            A job in an instance of the oven scheduling algorithm
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Job.Id">
+            <summary>
+            The id of the job
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Job.Name">
+            <summary>
+            The name of the job
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Job.EarliestStart">
+            <summary>
+            The earliest start time of the job
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Job.LatestEnd">
+            <summary>
+            The latest end time (=deadline) of the job
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Job.MinTime">
+            <summary>
+            The minimum time the job must spend in an oven (in seconds)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Job.MaxTime">
+            <summary>
+            The maximum time the job may spend in an oven (in seconds)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Job.Size">
+            <summary>
+            The size of the job 
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Job.AttributeIdPerMachine">
+            <summary>
+            The dictionary of attribute IDs of the job for every eligible machine; the keys are the machine IDs
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Job.EligibleMachines">
+            <summary>
+            List of IDs of eligible machines (jobs can only be processed on certain machines)
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Job.#ctor(System.Int32,System.String,System.DateTime,System.DateTime,System.Int32,System.Int32,System.Int32,System.Collections.Generic.IDictionary{System.Int32,System.Int32},System.Collections.Generic.IList{System.Int32})">
+            <summary>
+            Create a job in an instance of the oven scheduling algorithm
+            </summary>
+            <param name="id">The id of the job</param>
+            <param name="name">The name of the job</param>
+            <param name="earliestStart">The earliest start time of the job</param>
+            <param name="latestEnd">The latest end time of the job</param>
+            <param name="minTime"> The minimum time the job must spend in an oven (in seconds)</param>
+            <param name="maxTime"> The maximum time the job may spend in an oven (in seconds)</param>
+            <param name="size">The size of the job </param>
+            <param name="attributeIdPerMachine">The attribute IDs of the job for evry eligible machine </param>
+            <param name="eligibleMachines">The list of eligible machines for this job </param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Job.#ctor(OvenSchedulingAlgorithm.Interface.IJob)">
+            
+             copy constructor
+            
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.Implementation.Machine">
+            <summary>
+            A machine in an instance of the oven scheduling algorithm
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Machine.Id">
+            <summary>
+            The id of the machine
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Machine.Name">
+            <summary>
+            The name of the machine
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Machine.MinCap">
+            <summary>
+            The minimum capacity of the machine
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Machine.MaxCap">
+            <summary>
+            The maximum capacity of the machine
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Machine.AvailabilityStart">
+            <summary>
+            List of start times of intervals where machine is available
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Machine.AvailabilityEnd">
+            <summary>
+            List of end times of intervals where machine is available
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Machine.#ctor(System.Int32,System.String,System.Int32,System.Int32,System.Collections.Generic.IList{System.DateTime},System.Collections.Generic.IList{System.DateTime})">
+            <summary>
+            Create a machine in an instance of the oven scheduling algorithm
+            </summary>
+            <param name="id">The id of the machine</param>
+            <param name="name">The name of the machine</param>
+            <param name="minCap">The minimum capacity of the machine</param>
+            <param name="maxCap">The maximum capacity of the machine</param>
+            <param name="availabilityStart">List of start times of intervals where machine is available</param>
+            <param name="availabilityEnd">List of end times of intervals where machine is available</param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Machine.#ctor(OvenSchedulingAlgorithm.Interface.IMachine)">
+            <summary>
+            Copy constructor
+            </summary>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.Implementation.Output">
+            <summary>
+            An output of the oven scheduling algorithm
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Output.Name">
+            <summary>
+            The name of the output
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Output.CreationDate">
+            <summary>
+            The date the output was created
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Output.BatchAssignments">
+            <summary>
+            The list of batch assignments that the algorithm generated
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.Output.SolutionTypes">
+            <summary>
+            The list of solution types 
+            (if more than one entry: the instance has been solved using the SplitAndSolve algorithm 
+            and solution types are given for every short intervall)
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Output.GetBatches">
+            <summary>
+            Creates the list of batches that the algorithm generated from the list of batch assignments
+            </summary>        
+            <returns>List of batches.</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Output.GetBatchDictionary">
+            <summary>
+            Creates the dictionary of batches that the algorithm generated from the list of batches
+            </summary>
+            <returns>The dictionary of batches, keys are (machineId, batch position = batchId).</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Output.GetSetupTimesAndCostsDictionary(OvenSchedulingAlgorithm.Interface.IInstance,System.Collections.Generic.IDictionary{System.ValueTuple{System.Int32,System.Int32},OvenSchedulingAlgorithm.Interface.IBatch})">
+            <summary>
+            Creates a dictionary of setup times and costs before batches,
+            for a given instance and a given dictionary of batches.
+            The keys are (machineId, batch position = batchId) 
+            </summary>   
+            <param name="instance">the given instance</param>
+            <param name="batchDictionary">the given dictionary of batches</param> 
+            <returns>Dictionary of setup times and costs before batches.</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Output.#ctor(System.String,System.DateTime,System.Collections.Generic.IList{OvenSchedulingAlgorithm.Interface.IBatchAssignment},System.Collections.Generic.IList{OvenSchedulingAlgorithm.Interface.SolutionType})">
+            <summary>
+            Create an output of the oven scheduling algorithm
+            </summary>
+            <param name="name">The name of the output</param>
+            <param name="creationDate">The date the output was created</param>
+            <param name="batchAssignments">The list of batch assignments that the algorithm generated</param>
+            <param name="solutionTypes">The list of solution types</param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Output.#ctor">
+            <summary>
+            Create an empty output of the oven scheduling algorithm
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Output.Serialize(System.String)">
+            <summary>
+            Serialize the solution to a json file
+            </summary>
+            <param name="fileName">Location of the serialized filed</param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Output.DeserializeSolution(System.String)">
+            <summary>
+            Create a solution based on a serialized Object
+            </summary>
+            <param name="fileName">File location storing the serialized solution.</param>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.Implementation.WeightObjective">
+            <summary>
+            Weights of the objective function used for optimization in the oven scheduling problem
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.WeightObjective.WeightRuntime">
+            <summary>
+            Weight of the objective component cumulative processing time of ovens
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.WeightObjective.WeightSetupTimes">
+            <summary>
+            Weight of the objective component total setup times
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.WeightObjective.WeightSetupCosts">
+            <summary>
+            Weight of the objective component total setup costs
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.Implementation.WeightObjective.WeightTardiness">
+            <summary>
+            Weight of the objective component number of tardy jobs (= jobs finished after their latest end date)
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.WeightObjective.#ctor(System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Create weights of the objective function used for optimization in the oven scheduling problem
+            </summary>
+            <param name="weightRuntime">Weight of the objective component cumulative processing time of ovens</param>
+            <param name="weightSetupTimes">Weight of the objective component total setup times</param>
+            <param name="weightSetupCosts">Weight of the objective component total setup costs</param>
+            <param name="weightTardiness">Weight of the objective component number of tardy jobs</param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.WeightObjective.#ctor(System.Int32)">
+            <summary>
+            Create equal weights of the objective function used for optimization in the oven scheduling problem,
+            i.e. all weights are equal to weight
+            </summary>
+            <param name="weight">Weight of all objective components </param> 
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.WeightObjective.#ctor(OvenSchedulingAlgorithm.Interface.IWeightObjective)">
+            
+             copy constructor
+            
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.IOutput">
+            <summary>
+            An output of the oven scheduling algorithm
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IOutput.Name">
+            <summary>
+            The name of the output
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IOutput.CreationDate">
+            <summary>
+            The date the output was created
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IOutput.BatchAssignments">
+            <summary>
+            The list of batch assignments that the algorithm generated
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IOutput.SolutionTypes">
+            <summary>
+            The list of solution types 
+            (if more than one entry: the instance has been solved using the SplitAndSolve algorithm 
+            and solution types are given for every short intervall)
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.IOutput.GetBatches">
+            <summary>
+            Creates the list of batches that the algorithm generated from the list of batch assignments
+            </summary>
+            <returns>List of batches.</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.IOutput.GetBatchDictionary">
+            <summary>
+            Creates the dictionary of batches that the algorithm generated from the list of batches
+            </summary>
+            <returns>The dictionary of batches, keys are (machineId, batch position = batchId).</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Interface.IOutput.Serialize(System.String)">
+            <summary>
+            Serialize the solution to a json file
+            </summary>
+            <param name="fileName">Location of the serialized filed</param>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.IWeightObjective">
+            <summary>
+            Weights of the objective function used for optimization in the oven scheduling problem
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IWeightObjective.WeightRuntime">
+            <summary>
+            Weight of the objective component cumulative processing time of ovens
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IWeightObjective.WeightSetupTimes">
+            <summary>
+            Weight of the objective component total setup times
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IWeightObjective.WeightSetupCosts">
+            <summary>
+            Weight of the objective component total setup costs
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IWeightObjective.WeightTardiness">
+            <summary>
+            Weight of the objective component number of tardy jobs (= jobs finished after their latest end date)
+            </summary>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Interface.SolutionType">
+             <summary>
+             Possible solution types
+             </summary>
+            
+        </member>
+        <member name="F:OvenSchedulingAlgorithm.Interface.SolutionType.OptimalSolutionFound">
+            <summary>
+            solution was proven to be optimal by minizinc
+            </summary>
+        </member>
+        <member name="F:OvenSchedulingAlgorithm.Interface.SolutionType.ValidSolutionFound">
+            <summary>
+            valid solution found but optimality not proven
+            </summary>
+        </member>
+        <member name="F:OvenSchedulingAlgorithm.Interface.SolutionType.UnvalidatedSolution">
+            <summary>
+            Solution found, but validity has not been checked 
+            </summary>
+        </member>
+        <member name="F:OvenSchedulingAlgorithm.Interface.SolutionType.Unsatisfiable">
+            <summary>
+            Instance is unsatifiable
+            </summary>
+        </member>
+        <member name="F:OvenSchedulingAlgorithm.Interface.SolutionType.NoSolutionFound">
+            <summary>
+            No solution found within timelimit
+            </summary>
+        </member>
+        <member name="F:OvenSchedulingAlgorithm.Interface.SolutionType.ValidPartialSolutionFound">
+            <summary>
+            Partial solution found assigning only some jobs to batches
+            </summary>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Objective.ICalculateObjective">
+            <summary>
+            TODO
+            </summary>
+            
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.ICalculateObjective.CalculateComponentsObjectiveReal">
+            <summary>
+            From an instance and a solution to the oven scheduling problem as well as the weights used for optimization, 
+            calculate the components of the objective and the real-valued objective value of the solution (value between 0 and 1)
+            </summary>
+            <returns>The IObjectiveValue object associated with the solution and weights</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.ICalculateObjective.FindUnassignedJobs">
+            <summary>
+            Find all jobs of the instance that have not been assigned 
+            or that were assigned beyond the scheduling horizon in the current list of batch assignments
+            </summary>
+            <returns>The dictionary of unassigned jobs (keys are job ids)</returns>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Objective.Implementation.CalculateObjective">
+            <summary>
+            TODO
+            </summary>
+            
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.CalculateObjective.#ctor(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput,OvenSchedulingAlgorithm.Interface.IWeightObjective)">
+            <summary>
+            Constructor from IOutput solution
+            </summary>
+            <param name="instance"></param>
+            <param name="solution"></param>
+            <param name="weights"></param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.CalculateObjective.#ctor(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput,OvenSchedulingAlgorithm.Interface.IAlgorithmConfig)">
+            <summary>
+            Constructor from IOutput solution
+            </summary>
+            <param name="instance"></param>
+            <param name="solution"></param>
+            <param name="weights"></param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.CalculateObjective.#ctor(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput,System.Collections.Generic.IDictionary{System.ValueTuple{System.Int32,System.Int32},System.ValueTuple{System.Int32,System.Int32}},OvenSchedulingAlgorithm.Interface.IAlgorithmConfig)">
+            <summary>
+            Constructor from IOutput solution
+            </summary>
+            <param name="instance"></param>
+            <param name="solution"></param>
+            <param name="setupDict"></param>
+            <param name="config"></param>        
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.CalculateObjective.#ctor(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput,OvenSchedulingAlgorithm.Interface.IWeightObjective,OvenSchedulingAlgorithm.InstanceChecker.InstanceData)">
+            <summary>
+            Constructor from IOutput solution
+            </summary>
+            <param name="instance"></param>
+            <param name="solution"></param>
+            <param name="weights"></param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.CalculateObjective.CalculateComponentsObjectiveReal">
+            <summary>
+            From an instance and a solution to the oven scheduling problem as well as the weights used for optimization, 
+            calculate the components of the objective and the real-valued objective value of the solution (value between 0 and 1).
+            Note: times involved in objective components are in minutes (in order to be compatible with mzn calculations)
+            </summary>
+            <returns>The IObjectiveValue object associated with the solution and weights</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.CalculateObjective.CalculateTotalProcessingTime">
+            <summary>
+            Calculate total runtime of ovens in seconds
+            </summary>
+            <returns>total runtime of ovens in seconds</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.CalculateObjective.CalculateLateJobs">
+            <summary>
+            Calculate number of jobs that are finished too late
+            </summary>
+            <returns>Number of jobs that are finished too late</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.CalculateObjective.CalculateSetupTimesAndCosts">
+            <summary>
+            Calculate total setup times (in seconds) and total setup costs
+            </summary>
+            <returns>(total setup time, total setup cost)</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.CalculateObjective.CalculateDistanceEarliestStart">
+            <summary>
+            Calculate the total quadratic distance to earliest start date (times involved are in minutes)
+            </summary>
+            <returns>Value of the objective component total quadratic distance to earliest start date (for times in minutes)</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.CalculateObjective.CalculateDistanceLatestEnd">
+            <summary>
+            Calculate the total quadratic distance to latest end date (times involved are in minutes)     
+            </summary>
+            <returns>Value of the objective component total quadratic distance to latest end date (times in minutes)</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.CalculateObjective.FindUnassignedJobs">
+            <summary>
+            Find all jobs of the instance that have not been assigned 
+            or that were assigned beyond the scheduling horizon in the current list of batch assignments
+            </summary>
+            <returns>The dictionary of unassigned jobs (keys are job ids)</returns>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.Implementation.ObjectiveComponents.TotalRuntimeSeconds">
+            <summary>
+            Total runtime of ovens in seconds
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.Implementation.ObjectiveComponents.WeightedTotalRuntime">
+            <summary>
+            Weighted total runtime of ovens in minutes 
+            (converted to minutes, normalized and then multiplied with weight of this cost component)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.Implementation.ObjectiveComponents.TotalSetupTimesSeconds">
+            <summary>
+            Total setup times in seconds
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.Implementation.ObjectiveComponents.WeightedTotalSetupTimes">
+            <summary>
+            Weighted Total setup times in seconds
+            (normalized and then multiplied with weight of this cost component)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.Implementation.ObjectiveComponents.TotalSetupCosts">
+            <summary>
+            Total setup costs
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.Implementation.ObjectiveComponents.WeightedTotalSetupCosts">
+            <summary>
+            Weighted Total setup costs
+            (normalized and then multiplied with weight of this cost component)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.Implementation.ObjectiveComponents.FinishedTooLate">
+            <summary>
+            Number of jobs that are finished after their latest end time 
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.Implementation.ObjectiveComponents.WeightedFinishedTooLate">
+            <summary>
+            Weighted Number of jobs that are finished after their latest end time 
+            (normalized and then multiplied with weight of this cost component)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.Implementation.ObjectiveComponents.NumberOfUnscheduledJobs">
+            <summary>
+            The number of unscheduled jobs (or jobs that are scheduled outside the scheduling horizon)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.Implementation.ObjectiveComponents.UnscheduledJobs">
+            <summary>
+            The dictionary of unscheduled jobs (or jobs that are scheduled outside the scheduling horizon).
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.Implementation.ObjectiveComponents.ObjectiveValue">
+            <summary>
+            The aggregated normalised objective value of the solution (between 0 and 1)
+            </summary>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Objective.Implementation.ObjectiveWriter">
+            <summary>
+            Breaks down the objective of a solution of an oven scheduling problem into smaller intervals and into machines
+            and writes these values to a string for a .csv file
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.ObjectiveWriter.WriteObjectiveToCsv(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput,System.TimeSpan)">
+            <summary>
+            Writes the objective of a solution of an oven scheduling problem to a string for .csv file
+            Objective is broken down to machines and smaller intervals
+            </summary>
+            <param name="instance">the instance of the oven scheduling problem</param>
+            <param name="output">the solution of the oven scheduling problem</param>
+            <param name="interval">the length of the interval into which the objective should be broken done to</param>
+            <returns>string that can be written to .csv file</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.ObjectiveWriter.CalculateRuntime(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput,System.TimeSpan)">
+            <summary>
+            Calculates the runtime per oven and per interval for a given solution of the oven scheduling problem
+            Note that the runtime of a batch is counted to the interval in which the batch starts and 
+            is not split if the batch spans several intervals
+            </summary>
+            <param name="instance">the instance of the oven scheduling problem</param>
+            <param name="output">the solution of the oven scheduling problem</param>
+            <param name="interval">the length of the interval</param>
+            <returns>An array of runtimes per interval and per machine, an array of runtimes per interval and an array of machine names</returns>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Objective.Implementation.Resources.ObjectiveWriterResources">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.Implementation.Resources.ObjectiveWriterResources.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.Implementation.Resources.ObjectiveWriterResources.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.Implementation.Resources.ObjectiveWriterResources.Days">
+            <summary>
+              Looks up a localized string similar to Tage.
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.Implementation.Resources.ObjectiveWriterResources.Interval">
+            <summary>
+              Looks up a localized string similar to Intervall.
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.Implementation.Resources.ObjectiveWriterResources.to">
+            <summary>
+              Looks up a localized string similar to bis.
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.Implementation.Resources.ObjectiveWriterResources.Total">
+            <summary>
+              Looks up a localized string similar to Gesamt.
+            </summary>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Objective.Implementation.ViolationCounter">
+            <summary>
+            Checks the validity of a solution to the oven scheduling problem and counts the number of hard constraints violations (+number of unscheduled jobs) 
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.ViolationCounter.#ctor(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput,System.String,OvenSchedulingAlgorithm.Interface.IAlgorithmConfig)">
+            <summary>
+            Constructor from IOutput solution
+            </summary>
+            <param name="instance"></param>
+            <param name="solution"></param>
+            <param name="logfilename"></param>
+            <param name="config"></param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.ViolationCounter.#ctor(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput,System.Collections.Generic.IDictionary{System.ValueTuple{System.Int32,System.Int32},OvenSchedulingAlgorithm.Interface.IBatch},System.Collections.Generic.IDictionary{System.ValueTuple{System.Int32,System.Int32},System.ValueTuple{System.Int32,System.Int32}},System.String,OvenSchedulingAlgorithm.Interface.IAlgorithmConfig)">
+            <summary>
+            Constructor from IOutput solution
+            </summary>
+            <param name="instance"></param>
+            <param name="solution"></param>
+            <param name="batchDictionary"></param>
+            <param name="setupDict"></param>
+            <param name="logfilename"></param>
+            <param name="config"></param>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.ViolationCounter.ValidateSolution(System.Boolean)">
+            <summary>
+            Determine the number of hard constraint violations
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.ViolationCounter.CountJobsUnscheduledOrScheduledOutsideHorizon">
+            <summary>
+            Count the number of jobs that are unscheduled or scheduled outside the scheduling horizon
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.ViolationCounter.CountJobsAssignedOutsideHorizonCost">
+            <summary>
+            Count the number of jobs that are scheduled outside the scheduling horizon
+            </summary>
+            <returns>Number of jobs that are scheduled outside the scheduling horizon in the solution</returns>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.IObjectiveComponents.TotalRuntimeSeconds">
+            <summary>
+            Total runtime of ovens in seconds
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.IObjectiveComponents.WeightedTotalRuntime">
+            <summary>
+            Weighted total runtime of ovens in minutes 
+            (normalized and then multiplied with weight of this cost component)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.IObjectiveComponents.TotalSetupTimesSeconds">
+            <summary>
+            Total setup times in seconds
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.IObjectiveComponents.WeightedTotalSetupTimes">
+            <summary>
+            Weighted Total setup times in seconds
+            (normalized and then multiplied with weight of this cost component)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.IObjectiveComponents.TotalSetupCosts">
+            <summary>
+            Total setup costs
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.IObjectiveComponents.WeightedTotalSetupCosts">
+            <summary>
+            Weighted Total setup costs
+            (normalized and then multiplied with weight of this cost component)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.IObjectiveComponents.FinishedTooLate">
+            <summary>
+            Number of jobs that are finished after their latest end time 
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.IObjectiveComponents.WeightedFinishedTooLate">
+            <summary>
+            Weighted Number of jobs that are finished after their latest end time 
+            (normalized and then multiplied with weight of this cost component)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.IObjectiveComponents.NumberOfUnscheduledJobs">
+            <summary>
+            The number of unscheduled jobs (or jobs that are scheduled outside the scheduling horizon)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.IObjectiveComponents.UnscheduledJobs">
+            <summary>
+            The dictionary of unscheduled jobs (or jobs that are scheduled outside the scheduling horizon).
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.IObjectiveComponents.ObjectiveValue">
+            <summary>
+            The aggregated normalised objective value of the solution (between 0 and 1)
+            </summary>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.Objective.IObjectiveWriter">
+            <summary>
+            Breaks down the objective of a solution of an oven scheduling problem into smaller intervals and into machines
+            and writes these values to a string for a .csv file
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.IObjectiveWriter.WriteObjectiveToCsv(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput,System.TimeSpan)">
+            <summary>
+            Writes the objective of a solution of an oven scheduling problem to a string for .csv file
+            Objective is broken down to machines and smaller intervals
+            </summary>
+            <param name="instance">the instance of the oven scheduling problem</param>
+            <param name="output">the solution of the oven scheduling problem</param>
+            <param name="interval">the length of the interval into which the objective should be broken done to</param>
+            <returns>string that can be written to .csv file</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Objective.IObjectiveWriter.CalculateRuntime(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput,System.TimeSpan)">
+            <summary>
+            Calculates the runtime per oven and per interval for a given solution of the oven scheduling problem
+            Note that the runtime of a batch is counted to the interval in which the batch starts and 
+            is not split if the batch spans several intervals
+            </summary>
+            <param name="instance">the instance of the oven scheduling problem</param>
+            <param name="output">the solution of the oven scheduling problem</param>
+            <param name="interval">the length of the interval</param>
+            <returns>An array of runtimes per interval and per machine, an array of runtimes per interval and an array of machine names</returns>
+        </member>
+    </members>
+</doc>
