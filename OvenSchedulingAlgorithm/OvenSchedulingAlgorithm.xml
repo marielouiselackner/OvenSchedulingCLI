@@ -135,7 +135,7 @@
             and converts back MiniZinc solution files to solutions of the original problem
             </summary>
         </member>
-        <member name="M:OvenSchedulingAlgorithm.Converter.IMiniZincConverter.ConvertToMiniZincInstance(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IWeightObjective,System.Boolean,System.Boolean,System.Boolean)">
+        <member name="M:OvenSchedulingAlgorithm.Converter.IMiniZincConverter.ConvertToMiniZincInstance(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IWeightObjective,System.Boolean,System.Boolean)">
             <summary>
             Take an instance an convert it into a MiniZinc instance file content
             </summary>
@@ -148,15 +148,7 @@
             tardiness lexicographically more important than setup costs.</param>
             <returns>Return the MiniZinc instance file contents as a string</returns>
         </member>
-        <member name="M:OvenSchedulingAlgorithm.Converter.IMiniZincConverter.ConvertToMiniZincPartialSolution(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput)">
-            <summary>
-            Take a partial solution and convert it into a MiniZinc additional instance file content
-            </summary>
-            /// <param name="instance">The instance for which the partial solution was created</param>
-            <param name="partialSolution">The patial solution that should be converted</param>
-            <returns>Return the MiniZinc partial solution instance file contents as a string</returns>
-        </member>
-        <member name="M:OvenSchedulingAlgorithm.Converter.IMiniZincConverter.ConvertToMiniZincWarmStartData(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput,System.Boolean)">
+        <member name="M:OvenSchedulingAlgorithm.Converter.IMiniZincConverter.ConvertToMiniZincWarmStartData(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput,System.Boolean,System.Boolean)">
             <summary>
             Take a (partial) initial solution and convert it into a MiniZinc additional instance file content
             which van be used for warm start in MiniZinc
@@ -298,29 +290,19 @@
             <param name="machines">Dictionary of machines</param>
             <returns>Dictionary of eligible machines</returns>
         </member>
-        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.ConvertToMiniZincInstance(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IWeightObjective,System.Boolean,System.Boolean,System.Boolean)">
+        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.ConvertToMiniZincInstance(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IWeightObjective,System.Boolean,System.Boolean)">
             <summary>
             Take an instance and convert it into a MiniZinc instance file content
             </summary>
             <param name="instance">The instance that should be converted</param>
             <param name="weights">Weights of the components of the objective function that should be used by the minizinc solver</param>
             <param name="convertToCPOptimizer">Optional boolean indicating whether insatnce should be converted to CP Optimizer instance instead of minizinc instance</param>
-            <param name="extraZerosSetup">Optional boolean indicating whether extra zeroes should be added to the matrix of setup times and costs</param>
             <param name="specialCaseLexicographicOptimization">Optional boolean indicating whether weights should be created for the case of lexicographic minimization 
             with total oven runtime lexicographically more important than tardiness, 
             tardiness lexicographically more important than setup costs.</param>
             <returns>Return the MiniZinc instance file contents as a string</returns>
         </member>
-        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.ConvertToMiniZincPartialSolution(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput)">
-            <summary>
-            Take a partial solution and convert it into a MiniZinc additional instance file content
-            which van be used for LNS
-            </summary>
-            /// <param name="instance">The instance for which the partial solution was created</param>
-            <param name="partialSolution">The partial solution that should be converted</param>
-            <returns>Return the MiniZinc partial solution instance file contents as a string</returns>
-        </member>
-        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.ConvertToMiniZincWarmStartData(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput,System.Boolean)">
+        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.ConvertToMiniZincWarmStartData(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IOutput,System.Boolean,System.Boolean)">
             <summary>
             Take a (partial) initial solution and convert it into a MiniZinc additional instance file content
             which van be used for warm start in MiniZinc
@@ -328,7 +310,8 @@
             </summary>
             /// <param name="instance">The instance for which the partial solution was created</param>
             <param name="partialSolution">The partial solution that should be converted</param>
-            <param name="reprJobPerBatch">Optional parameter indictaing whether the warm start data is created for a 
+            <param name="convertToCPOptimizer">Optional boolean indicating whether instance should be converted to CP Optimizer instance instead of minizinc instance</param>
+            <param name="reprJobPerBatchModel">Optional parameter indictaing whether the warm start data is created for a 
             minizinc model with a representative job per batch</param>
             <returns>Return the MiniZinc warm start data file contents as a string</returns>
         </member>
@@ -719,7 +702,7 @@
             Generator that creates random oven scheduling instances given the specified parameters.
             </summary>
         </member>
-        <member name="M:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceGenerator.GenerateInstance(OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters)">
+        <member name="M:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceGenerator.GenerateInstance(OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters,System.String)">
             <summary>
             Create random instance
             </summary> 
@@ -799,7 +782,7 @@
             <param name="rand">random element</param>
             <returns>Matrix of setup times or costs.</returns>
         </member>
-        <member name="M:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceGenerator.runGreedy(OvenSchedulingAlgorithm.Interface.IInstance,System.Boolean)">
+        <member name="M:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceGenerator.runGreedy(OvenSchedulingAlgorithm.Interface.IInstance,System.Boolean,System.String)">
             <summary>
             Run Greedy algorithm to check whether all jobs can be assigned
             </summary>
@@ -901,6 +884,7 @@
             <summary>
             Boolean indicating whether instances that can not be solved by greedy heuristic should be thrown away.
             If false, generated instance might be infeasible.
+            Null if parameters are not used for generation of a new instance but calculated for existing instance. 
             </summary>
         </member>
         <member name="P:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.DifferentAttributesPerMachine">
@@ -914,7 +898,7 @@
             Boolean indicating whether initial states should be chosen for every machine.
             </summary>
         </member>
-        <member name="M:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.#ctor(System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Boolean,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Double,System.Double,System.Double,System.Double,OvenSchedulingAlgorithm.InstanceGenerator.SetupType,OvenSchedulingAlgorithm.InstanceGenerator.SetupType,System.Boolean,System.Boolean,System.Boolean)">
+        <member name="M:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceParameters.#ctor(System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Boolean,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Double,System.Double,System.Double,System.Double,OvenSchedulingAlgorithm.InstanceGenerator.SetupType,OvenSchedulingAlgorithm.InstanceGenerator.SetupType,System.Nullable{System.Boolean},System.Boolean,System.Boolean)">
             <summary>
             Construct parameters for a random insatnce of the oven scheduling problem 
             </summary>
@@ -973,7 +957,8 @@
         </member>
         <member name="F:OvenSchedulingAlgorithm.InstanceGenerator.SetupType.realistic">
             <summary>
-            setup times or costs that are closer to reality 
+            setup times or costs that are closer to reality: 
+            setup between batches of the same attribute is smaller than between batches of different attributes
             </summary>
         </member>
         <member name="F:OvenSchedulingAlgorithm.InstanceGenerator.SetupType.symmetric">
@@ -1448,11 +1433,6 @@
             Copy constructor
             </summary>
         </member>
-        <member name="M:OvenSchedulingAlgorithm.Interface.Implementation.Instance.#ctor(OvenSchedulingAlgorithm.Interface.IInstance,System.Collections.Generic.IList{System.Int32})">
-            <summary>
-            Create instance with initial States from an instance and a list of initial states
-            </summary>
-        </member>
         <member name="T:OvenSchedulingAlgorithm.Interface.Implementation.Job">
             <summary>
             A job in an instance of the oven scheduling algorithm
@@ -1802,7 +1782,7 @@
         </member>
         <member name="T:OvenSchedulingAlgorithm.Objective.ICalculateObjective">
             <summary>
-            TODO
+            Calculate objective of a given solution and for given weights to an instance of the Oven Scheduling Problem.
             </summary>
             
         </member>
@@ -1822,7 +1802,7 @@
         </member>
         <member name="T:OvenSchedulingAlgorithm.Objective.Implementation.CalculateObjective">
             <summary>
-            TODO
+            Calculate objective of a given solution and for given weights to an instance of the Oven Scheduling Problem.
             </summary>
             
         </member>

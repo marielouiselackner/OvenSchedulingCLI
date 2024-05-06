@@ -23,16 +23,8 @@ namespace OvenSchedulingAlgorithm.Converter
         /// tardiness lexicographically more important than setup costs.</param>
         /// <returns>Return the MiniZinc instance file contents as a string</returns>
         string ConvertToMiniZincInstance(IInstance instance, IWeightObjective weights, 
-            bool convertToCPOptimizer = false, bool extraZerosSetup = false,
+            bool convertToCPOptimizer = false, 
             bool specialCaseLexicographicOptimization = false);
-
-        /// <summary>
-        /// Take a partial solution and convert it into a MiniZinc additional instance file content
-        /// </summary>
-        /// /// <param name="instance">The instance for which the partial solution was created</param>
-        /// <param name="partialSolution">The patial solution that should be converted</param>
-        /// <returns>Return the MiniZinc partial solution instance file contents as a string</returns>
-        string ConvertToMiniZincPartialSolution(IInstance instance, IOutput partialSolution);
 
         /// <summary>
         /// Take a (partial) initial solution and convert it into a MiniZinc additional instance file content
@@ -43,7 +35,7 @@ namespace OvenSchedulingAlgorithm.Converter
         /// <param name="reprJobPerBatch">Optional parameter indictaing whether the warm start data is created for a 
         /// minizinc model with a representative job per batch</param>
         /// <returns>Return the MiniZinc warm start data file contents as a string</returns>
-        string ConvertToMiniZincWarmStartData(IInstance instance, IOutput partialSolution, bool reprJobPerBatch = false);
+        string ConvertToMiniZincWarmStartData(IInstance instance, IOutput partialSolution, bool reprJobPerBatch = false, bool convertToCPOptimizer = false);
 
         /// <summary>
         /// Create content of a MiniZinc weights file from weights of the objective function

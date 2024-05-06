@@ -22,7 +22,8 @@ namespace OvenSchedulingAlgorithm.InstanceGenerator
         /// </summary>
         arbitrary,
         /// <summary>
-        /// setup times or costs that are closer to reality 
+        /// setup times or costs that are closer to reality: 
+        /// setup between batches of the same attribute is smaller than between batches of different attributes
         /// </summary>
         realistic,
         /// <summary>

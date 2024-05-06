@@ -11,10 +11,9 @@ using IInstance = OvenSchedulingAlgorithm.Interface.IInstance;
 namespace OvenSchedulingAlgorithm.Objective.Implementation
 {
     /// <summary>
-    /// TODO
+    /// Calculate objective of a given solution and for given weights to an instance of the Oven Scheduling Problem.
     /// </summary>
     /// 
-    //TODO can we change this class to internal?
     public class CalculateObjective : ICalculateObjective
     {
         private readonly IInstance _instance;

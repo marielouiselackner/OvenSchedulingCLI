@@ -21,7 +21,7 @@ namespace OvenSchedulingAlgorithm.InstanceGenerator
         /// Create random instance
         /// </summary> 
         /// <returns>Randomly created instance with given parameters.</returns>
-        public IInstance GenerateInstance(RandomInstanceParameters parameters)
+        public IInstance GenerateInstance(RandomInstanceParameters parameters, string? greedySolutionFilename)
         {
             int n = parameters.JobCount;
             int k = parameters.MachineCount;
@@ -212,7 +212,7 @@ namespace OvenSchedulingAlgorithm.InstanceGenerator
                 //run greedy algorithm to check whether instance is feasible 
                 //(instance could be infeasible e.g because machine capacities are too small) 
                 //note that greedy heuristic might not be able to assign all jobs eventhough instance is feasible
-                int unassignedJobs = runGreedy(instance, parameters.SolvableByGreedyOnly);
+                int unassignedJobs = runGreedy(instance, parameters.SolvableByGreedyOnly == true, greedySolutionFilename);
 
                 //write info to console if not all jobs could be assigned
                 if (unassignedJobs > 0)
@@ -223,7 +223,7 @@ namespace OvenSchedulingAlgorithm.InstanceGenerator
                 //accept instance if:
                 //greedy algorithm was capable of assigning all jobs 
                 //or we are also interested in instances that cannot be solved by the greedy heuristic (might still be feasible)
-                if (!parameters.SolvableByGreedyOnly || unassignedJobs == 0)                     
+                if (!parameters.SolvableByGreedyOnly == true || unassignedJobs == 0)                     
                 {
                     //serialize instance
                     instance.Serialize(instanceFileName.Replace(':', '-'));
@@ -248,7 +248,7 @@ namespace OvenSchedulingAlgorithm.InstanceGenerator
                     }               
                     
                     //write actual values of all random instance parameters to file 
-                    RandomInstanceParameters actualParameters = RandomInstanceParameters.GetParametersInstance(instance, parameters);
+                    RandomInstanceParameters actualParameters = RandomInstanceParameters.GetParametersInstance(instance);
                     fileName = "ActualParameters-" + instanceName + "-"
                         + creaTime.ToString("ddMM-HH.mm.ss", CultureInfo.InvariantCulture) + ".json";
                     actualParameters.Serialize(fileName);
@@ -427,7 +427,6 @@ namespace OvenSchedulingAlgorithm.InstanceGenerator
                         otherAttributeId = attributeIds[j];
                     }                    
                     //TODO this only works if the original attributes have IDs 1, 2, ..., a
-                    //for current Opcenter instances this doesn't matter because setup times and costs are 0 anyway
                     setupCostsAttribute.Add(attribute.SetupCostsAttribute[otherAttributeId]);
                     setupTimesAttribute.Add(attribute.SetupTimesAttribute[otherAttributeId]);
                 }
@@ -798,7 +797,7 @@ namespace OvenSchedulingAlgorithm.InstanceGenerator
                 double percent = 1 - rand.NextDouble() * (1 - availability_percentage);
                 int end = start + Math.Max(
                     minShiftLength,
-                    (int)Math.Ceiling((randomNumbers[j] - start) * percent)
+                    (int)Math.Floor((randomNumbers[j] - start) * percent) //we round down because we don't want end of shift to be = start of next shift
                     );                
                 availabilityEnd.Add(schedulingHorizonStart.AddMinutes(end));
 
@@ -875,7 +874,7 @@ namespace OvenSchedulingAlgorithm.InstanceGenerator
         /// <param name="solvableByGreedyOnly">boolean indicating whether we are only interested in solutions were greedy can assign all jobs. 
         /// If false, greedy solution will always be serialized to file; if true, greedy solution is only serialized if all jobs were assigned. </param>
         /// <returns>Number of jobs that were not assigned</returns>
-        private int runGreedy(IInstance instance, bool solvableByGreedyOnly)
+        private int runGreedy(IInstance instance, bool solvableByGreedyOnly, string? solutionFilename)
         {
             int unassignedJobs = instance.Jobs.Count;
             
@@ -890,9 +889,12 @@ namespace OvenSchedulingAlgorithm.InstanceGenerator
             if (!solvableByGreedyOnly || unassignedJobs == 0 ) 
             {
                 //serialize solution
-                string solutionFileName = "greedySolution"+ instance.Name + "-" + 
-                    instance.CreationDate.ToString("ddMM-HH.mm.ss", CultureInfo.InvariantCulture) + ".json";
-                solution.Serialize(solutionFileName.Replace(':', '-'));
+                string fileName = 
+                    solutionFilename  == null || solutionFilename == "" ? 
+                    "greedySolution" + instance.Name + "-" + instance.CreationDate.ToString("ddMM-HH.mm.ss", CultureInfo.InvariantCulture) + ".json"
+                    : solutionFilename
+                    + ".json";
+                solution.Serialize(fileName.Replace(':', '-'));
             }                 
             
             return unassignedJobs;

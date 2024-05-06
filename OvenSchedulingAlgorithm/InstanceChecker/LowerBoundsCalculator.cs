@@ -88,22 +88,25 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
         /// <returns></returns>
         private static int CalculateSimpleLowerBoundSetupCost(IInstance instance, List<(int, IList<int>)> eligMachBatches)
         {
-            //NOTE: we assume that attribut ids are 1, ..., a
             IDictionary<int, int> minSetupAfter = new Dictionary<int, int>(); //keys are attribute IDs
             IDictionary<int, int> minSetupBefore = new Dictionary<int, int>(); //keys are attribute IDs
 
-            for (int i = 1; i <= instance.Attributes.Count; i++)
+            //in case attribute IDs are not 1, ..., a
+            var sortedAttributeIDs = instance.Attributes.Keys.OrderBy(x => x).ToList();
+            for (int i = 0; i <= instance.Attributes.Count-1; i++)
             {
                 //determine minimal setup cost after and before this attribute 
-                int minAfter = instance.Attributes[i].SetupCostsAttribute.Min();
-                minSetupAfter.Add(i, minAfter);
+                int attributeId = sortedAttributeIDs[i];
+                int minAfter = instance.Attributes[attributeId].SetupCostsAttribute.Min();
+                minSetupAfter.Add(attributeId, minAfter);
                 IList<int> setupBefore = new List<int>();
-                for (int j = 1; j <= instance.Attributes.Count; j++)
-                {
-                    setupBefore.Add(instance.Attributes[j].SetupCostsAttribute[i - 1]);
+                for (int j = 0; j <= instance.Attributes.Count-1; j++)
+                {   
+                    int attributeId2 = sortedAttributeIDs[j];
+                    setupBefore.Add(instance.Attributes[attributeId2].SetupCostsAttribute[i]);
                 }
                 int minBefore = setupBefore.Min();
-                minSetupBefore.Add(i, minBefore);
+                minSetupBefore.Add(attributeId, minBefore);
             }
 
             //bound based on taking the minimum setup cost before every batch
@@ -353,7 +356,6 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
         private static (int minbatchCount, int minProcTimeSeconds)
             GetBoundsSmallJobsCompProcTimes(IEnumerable<IJob> smallJobs, int maxCap)
         {
-            //TODO check that this works for different instance (more small jobs?)
             int minbatchCount = 0;
             int minProcTimeSeconds = 0;
             List<int> procTimes = new List<int>();

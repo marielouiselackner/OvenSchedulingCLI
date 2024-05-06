@@ -107,8 +107,9 @@ namespace OvenSchedulingAlgorithm.InstanceGenerator
         /// <summary>
         /// Boolean indicating whether instances that can not be solved by greedy heuristic should be thrown away.
         /// If false, generated instance might be infeasible.
+        /// Null if parameters are not used for generation of a new instance but calculated for existing instance. 
         /// </summary>
-        public bool SolvableByGreedyOnly { get; }
+        public bool? SolvableByGreedyOnly { get; }
 
         /// <summary>
         /// Boolean indicating whether jobs may have different attributes on different eligible machines.
@@ -121,7 +122,7 @@ namespace OvenSchedulingAlgorithm.InstanceGenerator
         /// </summary>
         public bool InitialStates { get; }
 
-        public static RandomInstanceParameters GetParametersInstance(IInstance instance, RandomInstanceParameters parameters) 
+        public static RandomInstanceParameters GetParametersInstance(IInstance instance) 
         {
             InstanceData instanceData = Preprocessor.DoPreprocessing(instance, new WeightObjective(1));
  
@@ -135,7 +136,7 @@ namespace OvenSchedulingAlgorithm.InstanceGenerator
             var maxProcessingTimes = instance.Jobs.Select(x => x.MaxTime);
             int diffProcTimes = minProcessingTimes.Union(maxProcessingTimes).Count();
 
-            bool chooseMaxProcTime = parameters.ChooseMaxProcTime;
+            bool chooseMaxProcTime = instance.Jobs.Select(j => j.MaxTime).Distinct().Count() > 1;
             int maxJobSize = instance.Jobs.Select(x => x.Size).Max();
             int maxCapLowerBound = instance.Machines.Select(x => x.Value.MaxCap).Min();
             int maxCapUpperBound = instance.Machines.Select(x => x.Value.MaxCap).Max();
@@ -170,7 +171,6 @@ namespace OvenSchedulingAlgorithm.InstanceGenerator
             }
 
             //calculate the spread of earliest start dates 
-            //TODO 21 get this from preprocessed instance
             DateTime maxEarliestStart = instanceData.MaximalEarliestStart;
             DateTime minEarliestStart = instanceData.MinEarliestStart;
             double spreadEarliestStartSeconds = maxEarliestStart.Subtract(minEarliestStart).TotalSeconds;
@@ -191,11 +191,107 @@ namespace OvenSchedulingAlgorithm.InstanceGenerator
             }
             phi *= (double)1 / n;
 
+            //create matrix of setupTimes and setupCosts
+            int[,] setupTimeMatrix = new int[a, a];
+            int[,] symmetricSetupTimeMatrix = new int[a, a];
+            int[,] setupCostMatrix = new int[a, a];
+            int[,] symmetricCostMatrix = new int[a, a];
+            List<int> setupTimesList = new List<int>();
+            List<int> setupCostsList = new List<int>();
+            List<int> nonDiagSetupTimesList = new List<int>();
+            List<int> nonDiagSetupCostsList = new List<int>();
+            var sortedAttributes = instance.Attributes.OrderBy(x => x.Key).ToList();
+            for (int i = 0; i < a; i++)
+            {
+                for (int j = 0; j < a; j++)
+                {
+                    int time = sortedAttributes[i].Value.SetupTimesAttribute[j];
+                    setupTimeMatrix[i, j] = time;
+                    if (i <= j)
+                    {
+                        symmetricSetupTimeMatrix[i,j] = time;
+                        symmetricSetupTimeMatrix[j, i] = time;
+                    }
+                    setupTimesList.Add(time);
+                    if (i != j)
+                    {
+                        nonDiagSetupTimesList.Add(time);
+                    }
 
-            SetupType setupCostType = parameters.SetupCostType; 
-            SetupType setupTimeType = parameters.SetupTimeType;
-            bool solvableByGreedyOnly = parameters.SolvableByGreedyOnly;
-            bool differentAttributesPerMachine = parameters.DifferentAttributesPerMachine;
+                    int cost = sortedAttributes[i].Value.SetupCostsAttribute[j];
+                    setupCostMatrix[i, j] = cost;
+                    if (i <= j)
+                    {
+                        symmetricCostMatrix[i, j] = cost;
+                        symmetricCostMatrix[j, i] = cost;
+                    }
+                    setupCostsList.Add(cost);
+                    if (i != j)
+                    {
+                        nonDiagSetupCostsList.Add(cost);
+                    }
+                }                    
+            }
+            //determine setup time type
+            SetupType setupTimeType = new SetupType();
+            if (setupTimesList.All(x => x == setupTimesList[0]))
+            {
+                if (setupTimesList[0] == 0)
+                {
+                    setupTimeType = SetupType.none;
+                }
+                else
+                {
+                    setupTimeType = SetupType.constant;
+                }
+            }
+            else if (symmetricSetupTimeMatrix == setupTimeMatrix)
+            {
+                setupTimeType = SetupType.symmetric;
+            }
+            //TODO allow instance parameters to contain multiple setup types, ie for the case where matrix is both symmetric and realistic
+            else if (Enumerable.Range(0,a-1).Select(x => setupTimeMatrix[x,x]).Max() //largest diagonal element
+                     <
+                     nonDiagSetupTimesList.Min()) //smallest non-diagonal element
+            {
+                setupTimeType = SetupType.realistic;
+            }
+            else
+            {
+                setupTimeType = SetupType.arbitrary;
+            }
+
+            //determine setup time type
+            SetupType setupCostType = new SetupType();            
+            if (setupCostsList.All(x => x == setupCostsList[0]))
+            {
+                if (setupCostsList[0] == 0)
+                {
+                    setupCostType = SetupType.none;
+                }
+                else
+                {
+                    setupCostType = SetupType.constant;
+                }
+            }
+            else if (symmetricCostMatrix == setupCostMatrix)
+            {
+                setupCostType = SetupType.symmetric;
+            }
+            //TODO allow instance parameters to contain multiple setup types, ie for the case where matrix is both symmetric and realistic
+            else if (Enumerable.Range(0, a - 1).Select(x => setupCostMatrix[x, x]).Max() //largest diagonal element
+                     <
+                     nonDiagSetupCostsList.Min()) //smallest non-diagonal element
+            {
+                setupCostType = SetupType.realistic;
+            }
+            else
+            {
+                setupCostType = SetupType.arbitrary;
+            }
+
+            int numberOfJobsWithConstantAttribute = instance.Jobs.Where(j => j.AttributeIdPerMachine.Values.Distinct().Count() == 1).Count();
+            bool differentAttributesPerMachine = numberOfJobsWithConstantAttribute == n;
             bool initialStates = instance.InitialStates != null ? true : false;
 
             RandomInstanceParameters actualParameters = new RandomInstanceParameters(
@@ -216,7 +312,7 @@ namespace OvenSchedulingAlgorithm.InstanceGenerator
                 phi,
                 setupCostType,
                 setupTimeType,
-                solvableByGreedyOnly,
+                null,
                 differentAttributesPerMachine,
                 initialStates
                 );
@@ -252,7 +348,7 @@ namespace OvenSchedulingAlgorithm.InstanceGenerator
         public RandomInstanceParameters(int jobCount, int machineCount, int attributeCount, int maxProcTime, int diffProcTimes, 
             bool chooseMaxProcTime, int maxJobSize, int maxCapLowerBound, int maxCapUpperBound, int minShiftCount, 
             int maxShiftCount, double availabilityPercentage, double eligibilityProba, double rho, double phi, 
-            SetupType setupCostType, SetupType setupTimeType, bool solvableByGreedyOnly, bool differentAttributesPerMachine,
+            SetupType setupCostType, SetupType setupTimeType, bool? solvableByGreedyOnly, bool differentAttributesPerMachine,
             bool initialStates)
         {
             JobCount = jobCount;
@@ -276,8 +372,6 @@ namespace OvenSchedulingAlgorithm.InstanceGenerator
             DifferentAttributesPerMachine = differentAttributesPerMachine;
             InitialStates = initialStates;
         }
-
-        //TODO throw exceptions if values are not in the correct range?
 
         /// <summary>
         /// Serialize the parameters to a json file

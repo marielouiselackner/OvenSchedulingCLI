@@ -14,6 +14,13 @@ namespace OvenSchedulingAlgorithmCLI
         [Option('s', Default = "", HelpText = "Solution file", SetName = "solve")]
         public string SolutionFile { get; set; }
 
+        [Option("mznS", Default = "", HelpText = "Parse MiniZinc solution file, convert to Output object and serialise to json. " +
+            "Path to instance file (in json format) must be provided as well with option -i.", SetName = "solve")]
+        public string MiniZincSolutionFile { get; set; }
+
+        [Option("jSF", Default = "", HelpText = "Filename of json file to which converted MiniZinc solution should be serialised", SetName = "solve")]
+        public string JsonSolutionFileName { get; set; }
+
         [Option("nSer", Default = false, HelpText = "Do not serialize instance and solution", SetName = "solve")]
         public bool DoNotSerializeInstanceSolution { get; set; }
 
@@ -36,37 +43,28 @@ namespace OvenSchedulingAlgorithmCLI
         [Option("logfile", Default = "logfile", HelpText = "Where to Store the output of the solution validation (filename without extension)", SetName = "solve")]
         public string LogFileName { get; set; }
 
-        [Option("alpha", Default = 4, HelpText = "Weight used for the objective total oven runtime")]
+        [Option("wRT", Default = 4, HelpText = "Weight used for the objective total oven runtime")]
         public int weightRunTime { get; set; }
 
-        [Option("beta", Default = 0, HelpText = "Weight used for the objective total setup times")]
+        [Option("wST", Default = 0, HelpText = "Weight used for the objective total setup times")]
         public int weightSetupTimes { get; set; }
 
-        [Option("gamma", Default = 1, HelpText = "Weight used for the objective total setup costs")]
+        [Option("wSC", Default = 1, HelpText = "Weight used for the objective total setup costs")]
         public int weightSetupCosts { get; set; }
 
-        [Option("delta", Default = 0, HelpText = "Weight used for the objective number of tardy jobs")]
+        [Option("wT", Default = 0, HelpText = "Weight used for the objective number of tardy jobs")]
         public int weightTardiness { get; set; }
-
 
         [Option('c', Default = false, HelpText = "Convert to MiniZinc instance")]
         public bool ConvertInstanceToMiniZinc { get; set; }
 
-        [Option("cNew", Default = false, HelpText = "Convert to MiniZinc or CP Optimizer instance in new format " +
-            "(extra zeros setup) " + "without solving ")]
-        public bool ConvertInstanceToMiniZincCpOptNew { get; set; }
-
-        [Option("dznF", Default = "", HelpText = "Filename without ending of minizinc data file (dzn-format) or CPOptimizer data file (dat-format) " +
-            "if instance is converted to MiniZinc or CPOptimizer instance without solving")]
+        [Option("dznF", Default = "", HelpText = "Filename without ending of minizinc data file (dzn-format) or CPOptimizer data file (dat-format)")]
         public string dznFileName { get; set; }
 
         [Option("cCP", Default = false, HelpText = "Convert to CPOptimizer instance")]
         public bool ConvertInstanceToCPOptimizer { get; set; }
 
-        [Option('t', Default = 60000, HelpText = "Time Limit (in ms)", SetName = "solve")]
-        public int TimeLimit { get; set; }
-
-        [Option("iCheck", Default = false, HelpText = "Perform basic satisfiability check on instance", SetName = "solve")]
+        [Option("iCheck", Default = false, HelpText = "Perform basic satisfiability check on instance (try to schedule every job individually)", SetName = "solve")]
         public bool CheckInstance { get; set; }
 
         [Option("iCFile", Default = "", HelpText = "Path to file where result of basic satisfiability " +
@@ -80,8 +78,7 @@ namespace OvenSchedulingAlgorithmCLI
         public int MachineNumber { get; set; }
 
         [Option('a', Default = 2, HelpText = "Number of attributes in random instance", SetName = "generate")]
-        public int AttributeNumber { get; set; }
-                     
+        public int AttributeNumber { get; set; }                     
 
         [Option("omt", Default = 60, HelpText = "Maximum processing time for any job (in minutes)", SetName = "generate")]
         public int OverallMaxTime { get; set; }
@@ -131,23 +128,23 @@ namespace OvenSchedulingAlgorithmCLI
 
         [Option("sgreedy", Default = false, HelpText = "Boolean indicating whether instances that cannot be solved by " +
             "greedy heuristic should be thrown away. (Ie, only instances " +
-            "were all jobs can be assigned by greedy heuristic are accepted as random instances)", SetName = "generate")]
+            "where all jobs can be assigned by greedy heuristic are accepted as random instances)", SetName = "generate")]
         public bool SolvableByGreedyOnly { get; set; }
 
-        [Option("diffAtt", Default = false, HelpText = "Boolean indicating whether jobs may have different attributes " +
-            "on different eligible machines. If false, attributes of a job are the same on all eligible machines.", SetName = "generate")]
-        public bool DifferentAttributesPerMachine { get; set; }
+        [Option("gRF", Default = "", HelpText = "Filename without ending for the greedy solution of a randomly created instance")]
+        public string FileNameGreedySolRandom { get; set; }
 
-        [Option("initStates", Default = false, HelpText = "Boolean indicating whether initial states should be generated for all machines.", SetName = "generate")]
-        public bool InitialStates { get; set; }
-
-        //TODO implement
-        [Option('x', Default = false, HelpText = "Parse MiniZinc solution and convert to .json solution")]
-        public bool ParseMiniZincSolution { get; set; }
-
-        //TODO disable for time-being
-        [Option("lB", Default = false, HelpText = "Calculate lower bounds for instance (do no solve)", SetName = "solve")]
+        [Option("lB", Default = false, HelpText = "Calculate lower bounds for instance", SetName = "solve")]
         public bool CalculateLowerBounds { get; set; }
+
+        [Option("lBF", Default = "", HelpText = "Filename without ending for the calculated lower bounds")]
+        public string lBFileName { get; set; }
+
+        [Option("iP", Default = false, HelpText = "Calculate instance parameters", SetName = "solve")]
+        public bool CalculateInstanceParams { get; set; }
+
+        [Option("iPF", Default = "", HelpText = "Filename without ending for the calculated instance parameters")]
+        public string InstanceParamsFileName { get; set; }
 
         [Option("specialLexW", Default = false, HelpText = "In MiniZinc converter (both for mzn and CPOptimizer), create weights for UC2, ie, the special case of lexicographic minimization " +
             "with total oven runtime lexicographically more important than tardiness," +

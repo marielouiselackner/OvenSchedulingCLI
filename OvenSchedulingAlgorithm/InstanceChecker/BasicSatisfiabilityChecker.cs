@@ -23,7 +23,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
         /// false if instance did not pass (unsatisfiability is guaranteed)</returns>
         public static (bool satisfiable, int tardyJobs) CheckSatisfiability(IInstance instance, string logFilePath = "")
         {
-            //TODO check validity first?
+            Console.WriteLine("Checking satisfiability of instance.");
 
             bool passedSatisfiabilityTest = true;
             int tardyJobs = 0;
@@ -36,8 +36,10 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             {                
 
                 //create instance consisting of this job only
-                IList<IJob> jobList = new List<IJob>();
-                jobList.Add(job);
+                IList<IJob> jobList = new List<IJob>
+                {
+                    job
+                };
                 IInstance singleJobInstance = new Instance("small instance", DateTime.Now, instance.Machines, 
                     instance.InitialStates, jobList, 
                     instance.Attributes, job.EarliestStart, instance.SchedulingHorizonEnd);

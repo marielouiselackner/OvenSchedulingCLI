@@ -11,7 +11,6 @@ namespace OvenSchedulingAlgorithm.Interface.Implementation
     /// </summary>
     public class Instance : IInstance
     {
-        //TODO check why I need set here?
         /// <summary>
         /// The name of the instance
         /// </summary>
@@ -82,6 +81,22 @@ namespace OvenSchedulingAlgorithm.Interface.Implementation
             Attributes = attributes;
             SchedulingHorizonStart = schedulingHorizonStart;
             SchedulingHorizonEnd = schedulingHorizonEnd;
+
+            foreach (IJob job in Jobs)
+            {
+                foreach (int machine in job.EligibleMachines)
+                {
+                    if (!Machines.ContainsKey(machine))
+                    {
+                        throw new ArgumentException("No machine with following id" + machine);
+                    }
+                    if (!Attributes.ContainsKey(job.AttributeIdPerMachine[machine]))
+                    {
+                        throw new ArgumentException("No attribute with following id" + job.AttributeIdPerMachine[machine]);
+                    }
+                }
+
+            }
         }
 
         /// <summary>
@@ -120,8 +135,6 @@ namespace OvenSchedulingAlgorithm.Interface.Implementation
             return instance;
         }
 
-        //TODO I think this was meant to go in the instance constructor and not the copy constructor. 
-        // Also need to test when exceptions are thrown.
         /// <summary>
         /// Copy constructor
         /// </summary>
@@ -155,36 +168,10 @@ namespace OvenSchedulingAlgorithm.Interface.Implementation
                     {
                         throw new ArgumentException("No attribute with following id" + job.AttributeIdPerMachine[machine]);
                     }
-                }
-                
+                }                
             }
             SchedulingHorizonStart = other.SchedulingHorizonStart;
             SchedulingHorizonEnd = other.SchedulingHorizonEnd;
-        }
-
-        /// <summary>
-        /// Create instance with initial States from an instance and a list of initial states
-        /// </summary>
-        public Instance(IInstance instance, IList<int> initStates)
-        {
-            Name = instance.Name;
-            CreationDate = instance.CreationDate;
-            Jobs = instance.Jobs;
-            Machines = instance.Machines;
-
-            //create dictionary of initial states from list
-            IDictionary<int, int> initialStates = new Dictionary<int, int>();
-            List<int> machineIds = Machines.Keys.ToList();
-            machineIds.Sort();
-            for (int i = 0; i < machineIds.Count; i++)
-            {
-                initialStates.Add(machineIds[i], initStates[i]);
-            }
-            InitialStates = initialStates;
-
-            Attributes = instance.Attributes; 
-            SchedulingHorizonStart = instance.SchedulingHorizonStart;
-            SchedulingHorizonEnd = instance.SchedulingHorizonEnd;
         }
     }
 }

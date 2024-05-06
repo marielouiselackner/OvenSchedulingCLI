@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using CommandLine;
-using MCP.MetaheuristicsFramework.Types.Impl;
+﻿using CommandLine;
 using OvenSchedulingAlgorithm.Algorithm;
+using OvenSchedulingAlgorithm.Converter;
+using OvenSchedulingAlgorithm.Converter.Implementation;
+using OvenSchedulingAlgorithm.InstanceChecker;
 using OvenSchedulingAlgorithm.InstanceGenerator;
 using OvenSchedulingAlgorithm.Interface;
 using OvenSchedulingAlgorithm.Interface.Implementation;
-using OvenSchedulingAlgorithm.Converter;
-using OvenSchedulingAlgorithm.Converter.Implementation;
-using OvenSchedulingAlgorithmCLI.Util;
-using OvenSchedulingAlgorithm.InstanceChecker;
-using OvenSchedulingAlgorithm.Objective.Implementation;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Threading;
 
 namespace OvenSchedulingAlgorithmCLI
@@ -50,12 +47,6 @@ namespace OvenSchedulingAlgorithmCLI
 
         private static void RunProgram(Options opts)
         {
-            string logfile = string.IsNullOrEmpty(opts.InstanceFile) ? 
-                "localsearchLogfile" 
-                : opts.InstanceFile.Replace("json", "").Replace("New", "" ) + "solution" + DateTime.Now.ToString() + ".localsearchlog";
-            //logger is currently only used for local search algorithms (sim annealing) from metaheuristics framework
-            //Logging.SetupLogger(3, true, logfile);
-            Logging.SetupLogger(1, true, logfile);
 
             IInstance instance = new Instance("", new DateTime(), new Dictionary<int, IMachine>(), new Dictionary<int, int>(), 
                 new List<IJob>(), new Dictionary<int, IAttribute>(), new DateTime(), new DateTime());
@@ -65,15 +56,17 @@ namespace OvenSchedulingAlgorithmCLI
 
             if (!string.IsNullOrEmpty(opts.WarmStartInstanceFile) && !string.IsNullOrEmpty(opts.WarmStartSolutionFile))
             {
-                //create minizinc warm start data file 
+                Console.WriteLine("----------------------\nCreate warmstart file.");
+
+                //create warm start data file 
                 IMiniZincConverter miniZincConverter = new MiniZincConverter();
 
                 // parse instance object from file 
                 IInstance warmStartInstance = Instance.DeserializeInstance(opts.WarmStartInstanceFile);
                 IOutput warmStartInitialSolution = Output.DeserializeSolution(opts.WarmStartSolutionFile);
 
-                string warmStartMznInput = miniZincConverter.ConvertToMiniZincWarmStartData
-                    (warmStartInstance, warmStartInitialSolution, opts.ReprJobModel);
+                string warmStartInput = miniZincConverter.ConvertToMiniZincWarmStartData
+                    (warmStartInstance, warmStartInitialSolution, opts.ReprJobModel, opts.ConvertInstanceToCPOptimizer);
 
                 string instanceFileNameForWarmStartFile = opts.WarmStartInstanceFile;
                 //remove extension and directory path
@@ -93,9 +86,17 @@ namespace OvenSchedulingAlgorithmCLI
                     instanceFileNameForWarmStartFile = instanceFileNameForWarmStartFile.Substring(0, index);
                 }
 
-                string warmStartFilename = "./warm_start_" + instanceFileNameForWarmStartFile + ".dzn";
-                File.WriteAllText(warmStartFilename, warmStartMznInput);
-
+                string warmStartFilename = "./warm_start_" + instanceFileNameForWarmStartFile;
+                if (opts.ConvertInstanceToCPOptimizer)
+                {
+                    warmStartFilename += ".dat";
+                }
+                else
+                {
+                    warmStartFilename += ".dzn";
+                }
+                
+                File.WriteAllText(warmStartFilename, warmStartInput);
                 return;
             }
 
@@ -103,47 +104,65 @@ namespace OvenSchedulingAlgorithmCLI
             if ((opts.RandomInstanceJobNumber != 0 | string.IsNullOrEmpty(opts.InstanceFile))
                 && (string.IsNullOrEmpty(opts.WarmStartInstanceFile) | string.IsNullOrEmpty(opts.WarmStartSolutionFile)))
             {
+                Console.WriteLine("----------------------\nCreate random instance with {0} jobs, {1} machines and {2} attributes.", opts.RandomInstanceJobNumber, opts.MachineNumber, opts.AttributeNumber);
                 RandomInstanceGenerator instanceGenerator = new RandomInstanceGenerator();
 
                 RandomInstanceParameters parameters = new RandomInstanceParameters(opts.RandomInstanceJobNumber, opts.MachineNumber, opts.AttributeNumber,
                 opts.OverallMaxTime, opts.DiffTimes, opts.MaxTime, opts.MaxSize, opts.MaxCapLowerBound, opts.MaxCapUpperBound,
                 opts.MinShiftCount, opts.MaxShiftCount, opts.AvailabilityPercentage, opts.EligibilityProba,
                 opts.EarliestStartDateFactor, opts.LatestEndDateFactor, opts.setupCosts, opts.setupTimes, opts.SolvableByGreedyOnly,
-                opts.DifferentAttributesPerMachine, opts.InitialStates);
+                false, true);
 
-                instance = instanceGenerator.GenerateInstance(parameters);
+                instance = instanceGenerator.GenerateInstance(parameters, opts.FileNameGreedySolRandom);
                 
             }
-            
-
-
-            //algorithm configuration
-            //where to store the solution
-            string outputFileLocation = Path.GetDirectoryName(opts.InstanceFile) + "/";
-
-            if (!string.IsNullOrEmpty(opts.OutputFile))
+            else if (!string.IsNullOrEmpty(opts.InstanceFile))
             {
-                outputFileLocation = opts.OutputFile;
+                // parse instance object from file 
+                instance = Instance.DeserializeInstance(opts.InstanceFile);
+            }     
+            
+            if (!string.IsNullOrEmpty(opts.MiniZincSolutionFile) && !string.IsNullOrEmpty(opts.InstanceFile))
+            {
+                Console.WriteLine("----------------------\nConvert and serialise minzinc solution for given instance.");
+
+                // read solution file text
+                string solutionFileContents = File.ReadAllText(opts.MiniZincSolutionFile);
+                IMiniZincConverter miniZincConverter = new MiniZincConverter();
+                IOutput output = miniZincConverter.ConvertMiniZincSolutionFile(instance, solutionFileContents);
+ 
+                //serialise output
+                string solutionFileName = "";
+                if (string.IsNullOrEmpty(opts.JsonSolutionFileName))
+                {
+                    string nowTime = DateTime.Now.ToString("ddMM-HH.mm.ss", CultureInfo.InvariantCulture);
+                    solutionFileName += "oven_scheduling_converted_solution" + instance.Name + nowTime + ".json";
+                }
+                else
+                {
+                    solutionFileName += opts.JsonSolutionFileName + ".json";
+                }
+                output.Serialize(solutionFileName.Replace(':', '-'));
+                return;
+
             }
 
-            IAlgorithmConfig config = new AlgorithmConfig(opts.TimeLimit, !opts.DoNotSerializeInstanceSolution, outputFileLocation, weights);
 
-            //TODO: either convert or run greedy
-            if (opts.ConvertInstanceToMiniZinc || opts.ConvertInstanceToCPOptimizer 
-                || opts.ConvertInstanceToMiniZincCpOptNew)
+            if (opts.ConvertInstanceToMiniZinc || opts.ConvertInstanceToCPOptimizer)
             {
                 // convert to mzn instance
                 IMiniZincConverter miniZincConverter = new MiniZincConverter();
 
                 // convert Instance to Minizinc/Cp Optimizer format
                 string instanceFileContents = miniZincConverter.ConvertToMiniZincInstance(instance, weights,  
-                    opts.ConvertInstanceToCPOptimizer, opts.ConvertInstanceToMiniZincCpOptNew, opts.SpecialCaseLexicographicWeights);
+                    opts.ConvertInstanceToCPOptimizer, opts.SpecialCaseLexicographicWeights);
          
                 // write instance file
                 string InstanceFileName = "";
                 if (opts.ConvertInstanceToCPOptimizer)
                 //in CPOptimizer format
                 {
+                    Console.WriteLine("----------------------\nConvert instance to CP Optimizer .dat file.");
                     if (string.IsNullOrEmpty(opts.dznFileName))
                     {
                         string nowTime = DateTime.Now.ToString("ddMM-HH.mm.ss", CultureInfo.InvariantCulture);
@@ -157,6 +176,7 @@ namespace OvenSchedulingAlgorithmCLI
                 else 
                 //in Minizinc format
                 {
+                    Console.WriteLine("----------------------\nConvert instance to MiniZinc .dzn file.");
                     if (string.IsNullOrEmpty(opts.dznFileName))
                     {
                         string nowTime = DateTime.Now.ToString("ddMM-HH.mm.ss", CultureInfo.InvariantCulture);
@@ -169,39 +189,70 @@ namespace OvenSchedulingAlgorithmCLI
                 }                
                 
                 File.WriteAllText(InstanceFileName, instanceFileContents);
+            }
 
-                //convert only, do not proceed to solving
-                return;
-            }              
+            //algorithm configuration
+            //where to store the solution
+            string outputFileLocation = Path.GetDirectoryName(opts.InstanceFile) + "/";
 
+            if (!string.IsNullOrEmpty(opts.OutputFile))
+            {
+                outputFileLocation = opts.OutputFile;
+            }
+            //timelimit is not used for the implemented procedures
+            IAlgorithmConfig config = new AlgorithmConfig(1, !opts.DoNotSerializeInstanceSolution, outputFileLocation, weights);
 
             if (opts.CalculateLowerBounds)
             {
+                Console.WriteLine("----------------------\nCalculating problem-specific lower bounds for instance.");
                 DateTime startLowerBounds = DateTime.Now;
 
                 InstanceData instanceData = Preprocessor.DoPreprocessing(
-                    instance, 
-                    weights);                
+                    instance,
+                    weights);
 
                 LowerBounds lb = LowerBoundsCalculator.CalculateLowerBounds(instance, instanceData, config);
-                
+
 
                 DateTime endLowerBounds = DateTime.Now;
                 TimeSpan runtimeLowerBounds = endLowerBounds - startLowerBounds;
                 //write runtime info to file 
-                string logFileName = "runtimeCalculationLowerBounds" + instance.Name + "-" + instance.CreationDate.ToString("ddMM-HH.mm.ss", CultureInfo.InvariantCulture) + ".txt";
-                string runtime = "time required to calculate lower bounds: " + runtimeLowerBounds.ToString("c") + " (hh:mm:ss.xxxxxxx);";
-
-                File.WriteAllText(logFileName.Replace(':', '-'), runtime);
+                //string logFileName = "runtimeCalculationLowerBounds" + instance.Name + "-" + instance.CreationDate.ToString("ddMM-HH.mm.ss", CultureInfo.InvariantCulture) + ".txt";
+                //string runtime = "time required to calculate lower bounds: " + runtimeLowerBounds.ToString("c") + " (hh:mm:ss.xxxxxxx);";
+                // File.WriteAllText(logFileName.Replace(':', '-'), runtime);
 
                 //add runtime info
                 lb.LowerBoundsCalculationTime = runtimeLowerBounds;
-                lb.Serialize("Lower bounds for instance "
+                string lowerBoundsFilename; 
+                if (string.IsNullOrEmpty(opts.lBFileName))
+                {
+                    lowerBoundsFilename = "Lower bounds for instance "
                         + instance.Name.Replace(':', '-')
-                        + ".json");
+                        + ".json";
+                }
+                else
+                {
+                    lowerBoundsFilename = opts.lBFileName + ".json";
+                }
+                lb.Serialize(lowerBoundsFilename);
+            }
 
-                //calculate lower bounds only, do not proceed to solving
-                return;
+            if (opts.CalculateInstanceParams)
+            {
+                Console.WriteLine("----------------------\nCalculating parameters of instance.");
+
+                RandomInstanceParameters actualParameters = RandomInstanceParameters.GetParametersInstance(instance);
+
+                string instanceParametersFilename;
+                if (string.IsNullOrEmpty(opts.lBFileName))
+                {
+                    instanceParametersFilename = "ActualParameters-" + instance.Name + ".json";
+                }
+                else
+                {
+                    instanceParametersFilename = opts.InstanceParamsFileName + ".json";
+                }
+                actualParameters.Serialize(instanceParametersFilename);
             }
 
             if (!string.IsNullOrEmpty(opts.InstanceCheckerFile) || opts.CheckInstance)
@@ -209,37 +260,36 @@ namespace OvenSchedulingAlgorithmCLI
                 //perform basic satisfiability check on instance
                 //bool passedSatisfiabilityTest = 
                 BasicSatisfiabilityChecker.CheckSatisfiability(instance, opts.InstanceCheckerFile);
+            }          
+            
 
-                //check satisfiability only, do not proceed to solving
-                return;
+            if (string.IsNullOrEmpty(opts.SolutionFile) && opts.UseGreedyHeuristic)
+            {
+            //
+            // solve the instance 
+            //
+            Console.WriteLine("----------------------\nSolving instance with greedy construction heuristic.");
+
+            SolveInstanceGreedy(instance, opts, config);
             }
-
-            if (!string.IsNullOrEmpty(opts.InstanceFile) && string.IsNullOrEmpty(opts.SolutionFile) && opts.UseGreedyHeuristic)
-                {
-                    //
-                    // solve the instance 
-                    //
-
-                    SolveInstanceGreedy(instance, opts, config);
-                }
             else if (!string.IsNullOrEmpty(opts.SolutionFile))
-                {
-                //
-                // validate solution against instance
-                //
+            {
+            //
+            // validate solution against instance
+            //
 
-                // parse solution
-                IOutput solution = Output.DeserializeSolution(opts.SolutionFile);
+            // parse solution
+            IOutput solution = Output.DeserializeSolution(opts.SolutionFile);
 
-                Console.WriteLine("----------------------------");
+            Console.WriteLine("----------------------------");
 
-                Console.WriteLine("Validating Oven Scheduling solution \n{0}\n for instance \n{1}\n",opts.SolutionFile, opts.InstanceFile);
+            Console.WriteLine("Validating Oven Scheduling solution \n{0}\n for instance \n{1}\n",opts.SolutionFile, opts.InstanceFile);
 
-                SolutionValidator validator = new SolutionValidator(instance, solution, opts.LogFileName, config);
-                validator.ValidateSolution();
+            SolutionValidator validator = new SolutionValidator(instance, solution, opts.LogFileName, config);
+            validator.ValidateSolution();
 
-                Console.WriteLine("----------------------------");
-                }              
+            Console.WriteLine("----------------------------");
+            }              
             
         }
 
@@ -256,6 +306,8 @@ namespace OvenSchedulingAlgorithmCLI
             
             if (opts.ValidateOutput)
             {
+                Console.WriteLine("----------------------\nValidate solution for given instance.");
+
                 if (opts.ValidateSpecialCaseLexicographicWeights)
                 {
                     InstanceData instanceData = Preprocessor.DoPreprocessing(instance, new WeightObjective(1,1,1,1));

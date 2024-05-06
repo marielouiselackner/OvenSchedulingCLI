@@ -15,14 +15,9 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
 
         public static InstanceData DoPreprocessing(IInstance instance, IWeightObjective weights)
         {
-            //TODO later - check validity first, if false return invalid-preprocessed instance (need to make constructor)
-            //bool passedValidityCheck = ValidityChecker.CheckValidity(instance);
             bool passedValidityCheck = false;
 
-            //TODO test & compare with minizinc 
-            //(check also difference with average min time in sec or minutes - values should be more precise and slightly smaller now)
-            // this is not the case: we need to use values in minutes otherwise multiplicative constants will be larger by a factor of 60
-            // write this up in documentation so that I will remember decision :)
+            // note: we need to use values in minutes otherwise multiplicative constants will be larger by a factor of 60
             string name = instance.Name;
             DateTime creaTime = instance.CreationDate;
             int numberOfJobs = instance.Jobs.Count;

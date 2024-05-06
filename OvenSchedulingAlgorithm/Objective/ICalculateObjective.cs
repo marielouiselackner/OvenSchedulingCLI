@@ -6,7 +6,7 @@ using System.Text;
 namespace OvenSchedulingAlgorithm.Objective
 {
     /// <summary>
-    /// TODO
+    /// Calculate objective of a given solution and for given weights to an instance of the Oven Scheduling Problem.
     /// </summary>
     /// 
     public interface ICalculateObjective

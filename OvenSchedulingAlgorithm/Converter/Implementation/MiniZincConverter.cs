@@ -198,7 +198,7 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
         /// </summary>
         /// <param name="attributes">The dictionary of attributes for which conversion function is created</param>
         /// <returns>Return the function that converts Minizinc Ids to Attribute Ids </returns>
-        private Func<int, int> ConvertMinizincAttributeIdToId(IDictionary<int, IAttribute> attributes)
+        private static Func<int, int> ConvertMinizincAttributeIdToId(IDictionary<int, IAttribute> attributes)
         {
             //get list of sorted dictionary keys (ie machine Ids)
             List<int> sortedAttributes = attributes.Keys.ToList();
@@ -212,7 +212,7 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
         /// </summary>
         /// <param name="timespan">timespan from which milliseconds should be dropped</param>
         /// <returns>timespan without milliseconds</returns>
-        private TimeSpan DropMillisecondsTimespan(TimeSpan timespan)
+        private static TimeSpan DropMillisecondsTimespan(TimeSpan timespan)
         {
             // milliseconds are ignored (this is achieved by an integer division and multiplication by the number of ticks per second)
             timespan = new TimeSpan(timespan.Ticks / TimeSpan.TicksPerSecond * TimeSpan.TicksPerSecond);
@@ -225,7 +225,7 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
         /// </summary>
         /// <param name="datetime">datetime from which milliseconds should be dropped</param>
         /// <returns>datetime without milliseconds</returns>
-        private DateTime DropMillisecondsDatetime(DateTime datetime)
+        private static DateTime DropMillisecondsDatetime(DateTime datetime)
         {
             // milliseconds are ignored (this is achieved by an integer division and multiplication by the number of ticks per second)
             datetime = new DateTime(datetime.Ticks / TimeSpan.TicksPerSecond * TimeSpan.TicksPerSecond);
@@ -238,7 +238,7 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
         /// </summary>
         /// <param name="sec">time in seconds</param>
         /// <returns>time in entire minutes</returns>
-        private int RoundUpFromSecondsToMinutes(int sec)
+        private static int RoundUpFromSecondsToMinutes(int sec)
         {
             int eps = 0;
             if (sec % 60 != 0)
@@ -259,7 +259,7 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
         /// <param name="jobs">List of jobs</param>
         /// <param name="machines">Dictionary of machines</param>
         /// <returns>Dictionary of eligible machines</returns>
-        private IDictionary<int, IMachine> getEligibleMachines(IList<IJob> jobs, IDictionary<int, IMachine> machines)
+        private static IDictionary<int, IMachine> getEligibleMachines(IList<IJob> jobs, IDictionary<int, IMachine> machines)
         {
             IDictionary<int, IMachine> eligibleMachines = new Dictionary<int, IMachine>();
 
@@ -284,13 +284,12 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
         /// <param name="instance">The instance that should be converted</param>
         /// <param name="weights">Weights of the components of the objective function that should be used by the minizinc solver</param>
         /// <param name="convertToCPOptimizer">Optional boolean indicating whether insatnce should be converted to CP Optimizer instance instead of minizinc instance</param>
-        /// <param name="extraZerosSetup">Optional boolean indicating whether extra zeroes should be added to the matrix of setup times and costs</param>
         /// <param name="specialCaseLexicographicOptimization">Optional boolean indicating whether weights should be created for the case of lexicographic minimization 
         /// with total oven runtime lexicographically more important than tardiness, 
         /// tardiness lexicographically more important than setup costs.</param>
         /// <returns>Return the MiniZinc instance file contents as a string</returns>
         public string ConvertToMiniZincInstance(IInstance instance, IWeightObjective weights, 
-            bool convertToCPOptimizer = false, bool extraZerosSetup = false, 
+            bool convertToCPOptimizer = false, 
             bool specialCaseLexicographicOptimization = false) 
         {
             InstanceData instanceData = Preprocessor.DoPreprocessing(instance, weights);
@@ -353,18 +352,16 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
                     }
                     setupTimes += "\n";
                 }
-                if (extraZerosSetup) //add 0s at the end (when no setup is required)
+                //add 0s at the end (when no setup is required)          
+                setupCosts += SETUP_COST_LINE;
+                setupTimes += SETUP_TIMES_LINE;
+                for (int i = 0; i < a; i++)
                 {
-                    setupCosts += SETUP_COST_LINE;
-                    setupTimes += SETUP_TIMES_LINE;
-                    for (int i = 0; i < a; i++)
-                    {
-                        setupCosts += "0,";
-                        setupTimes += "0,";
-                    }
-                    setupCosts += "\n";
-                    setupTimes += "\n";
+                    setupCosts += "0,";
+                    setupTimes += "0,";
                 }
+                setupCosts += "\n";
+                setupTimes += "\n";
 
                 fileContents += setupCosts.TrimEnd(',', '\n', '|') + SETUP_COSTS_END + MZN_LINE_END + "\n";
                 fileContents += setupTimes.TrimEnd(',', '\n', '|') + SETUP_TIMES_END + MZN_LINE_END + "\n";
@@ -515,20 +512,18 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
                 fileContents += cpA + a + cp_LINE_END + "\n";
                 string setupCosts = cpSETUP_COSTS;
                 string setupTimes = cpSETUP_TIMES;
-                if (extraZerosSetup) //add 0s at the beginning (when no setup is required)
+                //add 0s at the beginning (when no setup is required)
+                setupCosts += cpSETUP_COST_LINE;
+                setupTimes += cpSETUP_TIMES_LINE;
+                for (int i = 0; i < a; i++)
                 {
-                    setupCosts += cpSETUP_COST_LINE;
-                    setupTimes += cpSETUP_TIMES_LINE;
-                    for (int i = 0; i < a; i++)
-                    {
-                        setupCosts += "0,";
-                        setupTimes += "0,";
-                    }
-                    setupCosts = setupCosts.TrimEnd(',');
-                    setupCosts += cpSETUP_LINE_END + "\n";
-                    setupTimes = setupTimes.TrimEnd(',');
-                    setupTimes += cpSETUP_LINE_END + "\n";
+                    setupCosts += "0,";
+                    setupTimes += "0,";
                 }
+                setupCosts = setupCosts.TrimEnd(',');
+                setupCosts += cpSETUP_LINE_END + "\n";
+                setupTimes = setupTimes.TrimEnd(',');
+                setupTimes += cpSETUP_LINE_END + "\n";
                 foreach (KeyValuePair<int, IAttribute> attribute in sortedAttributes)
                 {
                     setupCosts += cpSETUP_COST_LINE;
@@ -739,45 +734,6 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
             return fileContents;
         }
 
-
-        /// <summary>
-        /// Take a partial solution and convert it into a MiniZinc additional instance file content
-        /// which van be used for LNS
-        /// </summary>
-        /// /// <param name="instance">The instance for which the partial solution was created</param>
-        /// <param name="partialSolution">The partial solution that should be converted</param>
-        /// <returns>Return the MiniZinc partial solution instance file contents as a string</returns>
-        public string ConvertToMiniZincPartialSolution(IInstance instance, IOutput partialSolution)
-        {
-            string mznPartialSolutionFileContents = "";
-
-            IList<IJob> allJobs = instance.Jobs;
-
-            // create list of jobs that are part of the partial solution 
-            IList<IJob> partialJobs = new List<IJob>();
-            foreach (var assignment in partialSolution.BatchAssignments)
-            {
-                partialJobs.Add(assignment.Job);
-            }
-            int fixedJobs = partialJobs.Count();
-            mznPartialSolutionFileContents += "int: fixed_jobs = " + fixedJobs + MZN_LINE_END + "\n";
-
-            // list of jobs sorted by increasing ID for minizinc input
-            IList <IJob> sortedPartialJobs = partialJobs.OrderBy(j => j.Id).ToList();
-
-            // create list of converted MiniZinc IDs for jobs in partial solution
-            IList<int> partialJobIDs = new List<int>();
-            Func<int, int> MiniZincJobId = ConvertJobIdToMinizinc(allJobs);
-            foreach (var job in sortedPartialJobs)
-            {
-                partialJobIDs.Add(MiniZincJobId(job.Id));
-            }
-
-            mznPartialSolutionFileContents += string.Join(",", partialJobIDs);
-
-            return mznPartialSolutionFileContents;
-        }
-
         /// <summary>
         /// Take a (partial) initial solution and convert it into a MiniZinc additional instance file content
         /// which van be used for warm start in MiniZinc
@@ -785,14 +741,13 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
         /// </summary>
         /// /// <param name="instance">The instance for which the partial solution was created</param>
         /// <param name="partialSolution">The partial solution that should be converted</param>
-        /// <param name="reprJobPerBatch">Optional parameter indictaing whether the warm start data is created for a 
+   	    /// <param name="convertToCPOptimizer">Optional boolean indicating whether instance should be converted to CP Optimizer instance instead of minizinc instance</param>
+        /// <param name="reprJobPerBatchModel">Optional parameter indictaing whether the warm start data is created for a 
         /// minizinc model with a representative job per batch</param>
         /// <returns>Return the MiniZinc warm start data file contents as a string</returns>
         public string ConvertToMiniZincWarmStartData(IInstance instance, IOutput partialSolution, 
-            bool reprJobPerBatchModel = false)
+            bool reprJobPerBatchModel = false, bool convertToCPOptimizer = false)
         {
-            string mznWarmStartFileContents = "";
-
             IList<int> allJobs = instance.Jobs.Select(x => x.Id).ToList();
             IDictionary<int, IMachine> machines = instance.Machines;
             int machineCount = machines.Count;
@@ -825,6 +780,7 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
                 }
 
             }
+
             foreach (int jobId in allJobs)
             {
                 if (!scheduledJobs.Contains(jobId))
@@ -854,95 +810,95 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
                 return null;
             }
 
-            if (!reprJobPerBatchModel)
+            // dictionaries of batches and machines for jobs:
+            // key is job id 
+            // value is minizinc-batchId (integer between 1 and number of jobs)
+            // resp. minizinc-machineIds (integer between 1 and number of machines)
+            IDictionary<int, string> batchForJob = new Dictionary<int, string>();
+            IDictionary<int, string> machineForJob = new Dictionary<int, string>();
+            //add entries to dictionaries for unscheduled jobs
+            foreach (int jobId in unscheduledJobs)
             {
-                // dictionaries of batches and machines for jobs:
-                // key is job id 
-                // value is minizinc-batchId (integer between 1 and number of jobs)
-                // resp. minizinc-machineIds (integer between 1 and number of machines)
-                IDictionary<int, string> batchForJob = new Dictionary<int, string>();
-                IDictionary<int, string> machineForJob = new Dictionary<int, string>();
-                //add entries to dictionaries for unscheduled jobs
-                foreach (int jobId in unscheduledJobs)
-                {
-                    batchForJob.Add(jobId, "<>");
-                    machineForJob.Add(jobId, "<>");
-                }
-
-
-                //list of batch start times (in minutes since start of scheduling horizon start)
-                IList<int> startTimes = new List<int>();
-                //initilase list with values for empty batches 
-                //startTime = end of scheduling horizon
-                for (int i = 0; i < machineCount * jobCount; i++)
-                {
-                    startTimes.Add(l);
-                }
-
-
-                List<int> sortedMachineIds = new List<int>();
-                foreach (IMachine machine in machines.Values)
-                {
-                    sortedMachineIds.Add(machine.Id);
-                }
-                sortedMachineIds.Sort();
-
-                for (int i = 0; i < sortedMachineIds.Count; i++)
-                {
-                    //write entries for batchForJob, machineForJob and startTimes for all jobs/batches scheduled on the i-th machine
-
-                    ICollection<IBatchAssignment> batchesOnCurrentMachine
-                        = partialSolution.BatchAssignments.Where(x => x.AssignedBatch.AssignedMachine.Id
-                        == sortedMachineIds[i]).ToList();
-
-                    int batchCountOnCurrentMachine = 0;
-                    int currentBatchId = 0;
-
-                    foreach (IBatchAssignment batchAssignment in batchesOnCurrentMachine.OrderBy(x => x.AssignedBatch.StartTime))
-                    {
-                        //if this batch is different from previous batch
-                        if (!(batchAssignment.AssignedBatch.Id == currentBatchId))
-                        {
-                            //increase batchCountOnCurrentMachine
-                            batchCountOnCurrentMachine += 1;
-
-                            //update currentBatchId
-                            currentBatchId = batchAssignment.AssignedBatch.Id;
-
-                            //write start time 
-                            TimeSpan startToBatchStart = batchAssignment.AssignedBatch.StartTime.Subtract(instance.SchedulingHorizonStart);
-                            // milliseconds are ignored
-                            startToBatchStart = DropMillisecondsTimespan(startToBatchStart);
-                            // if start time is not in entire minutes, it is rounded up
-                            int startToBatchStartMinutes = (int)Math.Ceiling(startToBatchStart.TotalMinutes);
-                            startTimes[batchCountOnCurrentMachine - 1 + i * jobCount] = startToBatchStartMinutes;
-                        }
-
-                        //add jobId and batchId/machineId to resp. dictionnaries
-                        batchForJob.Add(batchAssignment.Job.Id, batchCountOnCurrentMachine.ToString());
-                        machineForJob.Add(batchAssignment.Job.Id, (i + 1).ToString());
-                    }
-                }
-
-                //sort batchForJob and machineForJob by their keys
-                SortedDictionary<int, string> sortedBatchForJob = new SortedDictionary<int, string>(batchForJob);
-                SortedDictionary<int, string> sortedMachineForJob = new SortedDictionary<int, string>(machineForJob);
-
-                mznWarmStartFileContents += "warm_start = warm_start_array( [ \n" + "";
-
-                mznWarmStartFileContents += "warm_start( batch_for_job, array1d(1.." + jobCount.ToString()
-                    + ",[" + string.Join(",", sortedBatchForJob.Values) + "])),\n";
-                mznWarmStartFileContents += "warm_start( machine_for_job, array1d(1.." + jobCount.ToString()
-                    + ",[" + string.Join(",", sortedMachineForJob.Values) + "])),\n";
-                mznWarmStartFileContents += "warm_start( start_times, [" + string.Join(",", startTimes) + "])\n ] )";
+                batchForJob.Add(jobId, "<>");
+                machineForJob.Add(jobId, "<>");
             }
-            else
+
+            //list of batch start times (in minutes since start of scheduling horizon start)
+            IList<int> startTimes = new List<int>();
+            //initilase list with values for empty batches 
+            //startTime = end of scheduling horizon
+            for (int i = 0; i < machineCount * jobCount; i++)
+            {
+                startTimes.Add(l);
+            }
+
+		    List<int> sortedMachineIds = new List<int>();
+		    foreach (IMachine machine in machines.Values)
+		    {
+		        sortedMachineIds.Add(machine.Id);
+		    }
+		    sortedMachineIds.Sort();
+
+            for (int i = 0; i < sortedMachineIds.Count; i++)
+            {
+                //write entries for batchForJob, machineForJob and startTimes for all jobs/batches scheduled on the i-th machine
+
+                ICollection<IBatchAssignment> batchesOnCurrentMachine
+                    = partialSolution.BatchAssignments.Where(x => x.AssignedBatch.AssignedMachine.Id
+                    == sortedMachineIds[i]).ToList();
+
+                int batchCountOnCurrentMachine = 0;
+                int currentBatchId = 0;
+
+                foreach (IBatchAssignment batchAssignment in batchesOnCurrentMachine.OrderBy(x => x.AssignedBatch.StartTime))
+                {
+                    //if this batch is different from previous batch
+                    if (!(batchAssignment.AssignedBatch.Id == currentBatchId))
+                    {
+                        //increase batchCountOnCurrentMachine
+                        batchCountOnCurrentMachine += 1;
+
+                        //update currentBatchId
+                        currentBatchId = batchAssignment.AssignedBatch.Id;
+
+                        //write start time 
+                        TimeSpan startToBatchStart = batchAssignment.AssignedBatch.StartTime.Subtract(instance.SchedulingHorizonStart);
+                        // milliseconds are ignored
+                        startToBatchStart = DropMillisecondsTimespan(startToBatchStart);
+                        // if start time is not in entire minutes, it is rounded up
+                        int startToBatchStartMinutes = (int)Math.Ceiling(startToBatchStart.TotalMinutes);
+                        startTimes[batchCountOnCurrentMachine - 1 + i * jobCount] = startToBatchStartMinutes;
+                    }
+
+                    //add jobId and batchId/machineId to resp. dictionnaries
+                    batchForJob.Add(batchAssignment.Job.Id, batchCountOnCurrentMachine.ToString());
+                    machineForJob.Add(batchAssignment.Job.Id, (i + 1).ToString());
+                }
+            }
+
+            //sort batchForJob and machineForJob by their keys
+            SortedDictionary<int, string> sortedBatchForJob = new SortedDictionary<int, string>(batchForJob);
+            SortedDictionary<int, string> sortedMachineForJob = new SortedDictionary<int, string>(machineForJob);
+
+            string warmStartFileContents = "";
+            if (!reprJobPerBatchModel && !convertToCPOptimizer)
+            {              
+
+                warmStartFileContents += "warm_start = warm_start_array( [ \n" + "";
+
+                warmStartFileContents += "warm_start( batch_for_job, array1d(1.." + jobCount.ToString()
+                    + ",[" + string.Join(",", sortedBatchForJob.Values) + "])),\n";
+                warmStartFileContents += "warm_start( machine_for_job, array1d(1.." + jobCount.ToString()
+                    + ",[" + string.Join(",", sortedMachineForJob.Values) + "])),\n";
+                warmStartFileContents += "warm_start( start_times, [" + string.Join(",", startTimes) + "])\n ] )";
+            }
+            else if (reprJobPerBatchModel && !convertToCPOptimizer)
             {
                 //dictionary of job start times on machines (in minutes since start of scheduling horizon start)
                 //keys are (jobId, machineId)
                 IDictionary<(int, int), int> startTimesMach = new Dictionary<(int, int), int>();
                 //dictionary of job start times, keys are (jobId)
-                IDictionary<int, int> startTimes = new Dictionary<int, int>();
+                IDictionary<int, int> jobStartTimes = new Dictionary<int, int>();
                 //dictionary of job durations on machines (in minutes since start of scheduling horizon start)
                 //keys are (jobId, machineId)
                 IDictionary<(int, int), int> durationsMach = new Dictionary<(int, int), int>();
@@ -988,7 +944,7 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
                             // if start time is not in entire minutes, it is rounded up
                             int startToBatchStartMinutes = (int)Math.Ceiling(startToBatchStart.TotalMinutes);
                             startTimesMach.Add((jobId, machineId), startToBatchStartMinutes);
-                            startTimes.Add(jobId, startToBatchStartMinutes);
+                            jobStartTimes.Add(jobId, startToBatchStartMinutes);
 
                             //write duration
                             TimeSpan batchDuration = batch.EndTime.Subtract(batch.StartTime);
@@ -1052,16 +1008,140 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
                     //}
                 }
 
-                mznWarmStartFileContents += "warm_start = warm_start_array( [ \n" + "";
-                //mznWarmStartFileContents += "warm_start( startOnMach, [" + jobStartOnMachString.TrimEnd(',') + "]),\n";
-                mznWarmStartFileContents += "warm_start( dur, [" + jobDurString.TrimEnd(',') + "]),\n";
-                mznWarmStartFileContents += "warm_start( inBatchWithJob, [" + inBatchWithJobString.TrimEnd(',') + "])\n ] )";
+            warmStartFileContents += "warm_start = warm_start_array( [ \n" + "";
+            //warmStartFileContents += "warm_start( startOnMach, [" + jobStartOnMachString.TrimEnd(',') + "]),\n";
+            warmStartFileContents += "warm_start( dur, [" + jobDurString.TrimEnd(',') + "]),\n";
+            warmStartFileContents += "warm_start( inBatchWithJob, [" + inBatchWithJobString.TrimEnd(',') + "])\n ] )";
 
             }
 
             
+            if (convertToCPOptimizer)
+            {
+                warmStartFileContents = "";
+                // OPL
+                IList<int> allMachines = instance.Machines.Select(x => x.Key).ToList();
 
-            return mznWarmStartFileContents;
+                // batch start
+                warmStartFileContents += "WsBatchStart = [";
+                for (int m = 0; m < machineCount; m++)
+                {
+                    warmStartFileContents += "[";
+                    for (int b = 0; b < jobCount; b++)
+                    {
+                        int startTime = startTimes[m * jobCount + b];
+                        if (startTime == l)
+                        {
+                            startTime = -1;
+                        }
+                        warmStartFileContents += startTime;
+                        if (b != jobCount - 1)
+                        {
+                            warmStartFileContents += ",";
+                        }
+                    }
+                    warmStartFileContents += "]";
+                    if (m != machineCount - 1)
+                    {
+                        warmStartFileContents += ",";
+                    }
+                }
+                warmStartFileContents += "];\n";
+
+                // JobStart
+                warmStartFileContents += "WsJobStart = [";
+                foreach (int j in allJobs)
+                {
+                    int batch = int.Parse(batchForJob[j], DateTimeFormatInfo.InvariantInfo);
+                    int machine = int.Parse(machineForJob[j], DateTimeFormatInfo.InvariantInfo);
+                    // if all jobs that have the same batch on the same machine as this job are greater or equal to this job, it is the representative job 
+                    if (allJobs.Where(x => batch == int.Parse(batchForJob[x], DateTimeFormatInfo.InvariantInfo) && machine == int.Parse(machineForJob[x], DateTimeFormatInfo.InvariantInfo)).All(x => x >= j))
+                    {
+                        int startTime = startTimes[(machine - 1) * jobCount + (batch - 1)];
+                        if (startTime == l)
+                        {
+                            startTime = -1;
+                        }
+
+                        warmStartFileContents += startTime;
+                    }
+                    else
+                    {
+                        warmStartFileContents += "-1";
+                    }
+                    if (j != allJobs.Last())
+                    {
+                        warmStartFileContents += ",";
+                    }
+                }
+                warmStartFileContents += "];\n";
+
+                // JobOnMachStart
+                warmStartFileContents += "WsJobOnMachStart = [";
+                foreach (int j in allJobs)
+                {
+                    warmStartFileContents += "[";
+                    foreach (int m in allMachines)
+                    {
+                        int machine = int.Parse(machineForJob[j], DateTimeFormatInfo.InvariantInfo);
+                        int batch = int.Parse(batchForJob[j], DateTimeFormatInfo.InvariantInfo);
+                        // if all jobs that have the same batch on the same machine as this job are greater or equal to this job, it is the representative job 
+                        if (m == machine && allJobs.Where(x =>
+                                batch == int.Parse(batchForJob[x], DateTimeFormatInfo.InvariantInfo) && machine ==
+                                int.Parse(machineForJob[x], DateTimeFormatInfo.InvariantInfo)).All(x => x >= j))
+                        {
+                            int startTime = startTimes[(machine - 1) * jobCount + (batch - 1)];
+                            if (startTime == l)
+                            {
+                                startTime = -1;
+                            }
+
+                            warmStartFileContents += startTime;
+                        }
+                        else
+                        {
+                            warmStartFileContents += "-1";
+                        }
+
+                        if (m != allMachines.Last())
+                        {
+                            warmStartFileContents += ",";
+                        }
+                    }
+                    if (j != allJobs.Last())
+                    {
+                        warmStartFileContents += ",";
+                    }
+                    warmStartFileContents += "]";
+                }
+                warmStartFileContents += "];\n";
+
+                // InBatchWithJob
+                warmStartFileContents += "WsInBatchWithJob = [";
+                foreach (int j in allJobs)
+                {
+                    int batch = int.Parse(batchForJob[j], DateTimeFormatInfo.InvariantInfo);
+                    int machine = int.Parse(machineForJob[j], DateTimeFormatInfo.InvariantInfo);
+
+                    int representativeJob = allJobs.Where(x =>
+                        batch == int.Parse(batchForJob[x], DateTimeFormatInfo.InvariantInfo) &&
+                        machine == int.Parse(machineForJob[x], DateTimeFormatInfo.InvariantInfo)).Min();
+                    if (j == representativeJob)
+                    {
+                        warmStartFileContents += "0";
+                    }
+                    else
+                    {
+                        warmStartFileContents += representativeJob;
+                    }
+                    if (j != allJobs.Last())
+                    {
+                        warmStartFileContents += ",";
+                    }
+                }
+                warmStartFileContents += "];\n";
+            }
+            return warmStartFileContents;
         }
 
         /// <summary>
@@ -1085,14 +1165,14 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
             return mznWeightsFileContents;
         }
 
-            /// <summary>
-            /// Convert a given MiniZinc solution file into an OvenScheduling Object
-            /// </summary>
-            /// <param name="instance">Instance information associated to the solution</param>
-            /// <param name="solutionFileContents">The contents of the solution file that should be parsed as a string</param>
-            /// <returns>Creates output consisting of a list of converted batch assignments 
-            /// (if no solution could be found, the output will be empty).</returns>
-            public IOutput ConvertMiniZincSolutionFile(IInstance instance, string solutionFileContents)
+        /// <summary>
+        /// Convert a given MiniZinc solution file into an OvenScheduling Object
+        /// </summary>
+        /// <param name="instance">Instance information associated to the solution</param>
+        /// <param name="solutionFileContents">The contents of the solution file that should be parsed as a string</param>
+        /// <returns>Creates output consisting of a list of converted batch assignments 
+        /// (if no solution could be found, the output will be empty).</returns>
+        public IOutput ConvertMiniZincSolutionFile(IInstance instance, string solutionFileContents)
         {
             DateTime creaTime = DateTime.Now;
             IList<int> machineForJob = new List<int>(); 

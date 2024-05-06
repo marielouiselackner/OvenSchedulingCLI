@@ -101,7 +101,7 @@ namespace OvenSchedulingAlgorithmCLI
             int totalRuntimeHours = (int)Math.Floor((totalRuntime - 24 * 60 * 60 * totalRuntimeDays) / 60 / 60);
             int totalRuntimeMinutes = (int)Math.Floor((totalRuntime - 24 * 60 * 60 * totalRuntimeDays - 60 * 60 * totalRuntimeHours) / 60);
             int totalRuntimeSeconds = (int)(totalRuntime - 24 * 60 * 60 * totalRuntimeDays - 60 * 60 * totalRuntimeHours - 60 * totalRuntimeMinutes);
-            Console.WriteLine("Total runtime of ovens is {0} day(s) {1} hour(s){2} minute(s) {3} second(s).", totalRuntimeDays, totalRuntimeHours, totalRuntimeMinutes, totalRuntimeSeconds);
+            Console.WriteLine("Total runtime of ovens is {0} day(s) {1} hour(s) {2} minute(s) {3} second(s).", totalRuntimeDays, totalRuntimeHours, totalRuntimeMinutes, totalRuntimeSeconds);
             
             //finished_too_late
             int finishedTooLate = objResult.FinishedTooLate;

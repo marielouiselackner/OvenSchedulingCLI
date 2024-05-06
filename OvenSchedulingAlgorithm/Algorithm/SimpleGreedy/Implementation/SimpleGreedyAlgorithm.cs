@@ -91,7 +91,7 @@ namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
             //parameters needed for the function FillBatch 
             //(which jobs do we consider when trying to fill up a batch/how far do we look ahead?)
             TimeSpan earliestStartSpan = maxEarliestStart.Subtract(minEarliestStart);
-            int maxTimeWindow = 10;
+            int maxTimeWindow = 1;
            
             //convert attribute IDs to 1..a
             IMiniZincConverter converter = new MiniZincConverter();
@@ -120,8 +120,10 @@ namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
             //dictionary of assigned machine for (splitted) jobs that have already been scheduled
             IDictionary<string, int> jobScheduledtoMachineDict = new Dictionary<string, int>();
 
+            //earliest possible time for any job to be scheduled
+            int earliestShiftStart = (int)instance.Machines.Values.Select(x => x.AvailabilityStart.Min()).Min().Subtract(start).TotalMinutes;
             //current time in minutes (calculated as of SchedulingHorizonStart)
-            int time = -1;
+            int time = earliestShiftStart - 1;
 
             IEnumerable<IJob> availableJobs = Enumerable.Empty<IJob>();
 
@@ -141,9 +143,9 @@ namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
                 }
 
 #if DEBUG
-                //IList<string> availableJobsIds = availableJobs.Select(j => j.Id.ToString()).ToList
+                IList<string> availableJobsIds = availableJobs.Select(j => j.Id.ToString()).ToList();
                 //for comparability with Francesca's output: job ids start at 0, i.e are shifted by -1
-                IList<string> availableJobsIds = availableJobs.Select(j => (j.Id -1).ToString()).ToList();
+                //IList<string> availableJobsIds = availableJobs.Select(j => (j.Id -1).ToString()).ToList();
                 Console.WriteLine("available jobs: {0}", string.Join(", ", availableJobsIds));
 #else
 #endif
@@ -162,7 +164,6 @@ namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
                         i++;
                     }
                     bool onShift = true;
-                    //TODO Check: shouldn't this be  instance.Machines[machineId].AvailabilityEnd[newShift] < start + time?
                     if (newShift == -1 || instance.Machines[machineId].AvailabilityEnd[newShift] < start)
                     {
                         onShift = false;
@@ -178,26 +179,31 @@ namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
                     || currentShiftDict[machine.Id].onshift == false //machine is currently in off-shift
                     );
 
-                if (unavailableMachines.Count() == m)
+                IList<int> availableMachineIds = instance.Machines.Values
+                    .Where(machine => !unavailableMachines.Contains(machine)).Select(machine => machine.Id).ToList();
+                //available jobs need to have eligible machine that is currently available
+                availableJobs = availableJobs.Where(j => j.EligibleMachines.Intersect(availableMachineIds).Any());
+
+                if (unavailableMachines.Count() == m || !availableJobs.Any())
                 {
                     availableJobs = Enumerable.Empty<IJob>();
-
 #if DEBUG
-                    Console.WriteLine("currently no machines available, need to increase time", string.Join(", ", availableJobsIds));
+                    Console.WriteLine("currently no machines available (that are eligible for available jobs), need to increase time", string.Join(", ", availableJobsIds));
 #else
 #endif
                 }
 
-
                 while (availableJobs.Any())
                 {
+
+
                     //next job to be scheduled: sort first by Due Date, then by descending size 
                     IJob nextJob = availableJobs.OrderBy(job => job.LatestEnd).ThenByDescending(job => job.Size).FirstOrDefault();
 
 #if DEBUG
-                    //string nextJobId = nextJob.Id.ToString();
+                    string nextJobId = nextJob.Id.ToString();
                     //for comparability with Francesca's output: job ids start at 0, i.e are shifted by -1
-                    string nextJobId = (nextJob.Id - 1).ToString();
+                    //string nextJobId = (nextJob.Id - 1).ToString();
                     Console.WriteLine("selected job: {0}", nextJobId);
 #else
 #endif
@@ -259,9 +265,9 @@ namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
                     batchAssignments.Add(batchAssignment);
 
 #if DEBUG
-                    //string assignedMachineId = assignedMachine.Id.ToString();
+                    string assignedMachineId = assignedMachine.Id.ToString();
                     //for comparability with Francesca's output: machine ids start at 0, i.e are shifted by -1
-                    string assignedMachineId = (assignedMachine.Id - 1).ToString();
+                    //string assignedMachineId = (assignedMachine.Id - 1).ToString();
                     Console.WriteLine("Schedule selected job on machine {0}, batch number {1}", assignedMachineId, batchCount);
 #else
 #endif
@@ -385,8 +391,10 @@ namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
                 break;
             }
 
-            IList<SolutionType> solutionTypes = new List<SolutionType>();
-            solutionTypes.Add(SolutionType.UnvalidatedSolution);
+            IList<SolutionType> solutionTypes = new List<SolutionType>
+            {
+                SolutionType.UnvalidatedSolution
+            };
 
 
             DateTime creaTime = DateTime.Now;
@@ -517,9 +525,6 @@ namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
             IDictionary<string, int> jobScheduledtoMachineDict, int minJobSize,
             IList<IJob> unscheduledJobs, int maxTimeWindow)
         {
-            //TODO decide what this should be
-            int factorTimeWindow = 1;
-
             IJob jobinBatch = batchAssignment.Job;
             IBatch batch = batchAssignment.AssignedBatch;
 
@@ -535,7 +540,6 @@ namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
             while (batchSize + minJobSize <= batch.AssignedMachine.MaxCap)
             {
 
-                //for all other models: 
                 // first check if any compatible jobs are available at the start of the batch, 
                 // then look at all other jobs
                 //only consider compatible jobs that will not force jobinBatch to finish late
@@ -549,7 +553,7 @@ namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
 
                     //check if there are other jobs available that can be scheduled in the same batch
                     jobsAvailableForBatch = unscheduledJobs.Where(job =>
-                    job.EarliestStart <= batch.StartTime.AddMinutes(timeWindow * factorTimeWindow) //job is available at batch start time + look ahead window
+                    job.EarliestStart <= batch.StartTime.AddMinutes(timeWindow) //job is available at batch start time + look ahead window
                     && job.EligibleMachines.Contains(batch.AssignedMachine.Id) //assigned machine is eligible
                     && job.AttributeIdPerMachine[batch.AssignedMachine.Id] == jobinBatch.AttributeIdPerMachine[batch.AssignedMachine.Id] //matching attributes
                     && job.MaxTime >= batchMinTime //min batch processing time not too long
@@ -603,9 +607,9 @@ namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
                 batchAssignments.Add(batchAssignment);
 
 #if DEBUG
-                //string addedJobId = jobForBatch.Id.ToString();
+                string addedJobId = jobForBatch.Id.ToString();
                 //for comparability with Francesca's output: job ids start at 0, i.e are shifted by -1
-                string addedJobId = (jobForBatch.Id - 1).ToString();
+                //string addedJobId = (jobForBatch.Id - 1).ToString();
                 Console.WriteLine("Job {0} added to same batch", addedJobId);
 #else
 #endif
