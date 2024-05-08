@@ -1079,6 +1079,11 @@
             An instance for the oven scheduling algorithm
             </summary>
         </member>
+        <member name="P:OvenSchedulingAlgorithm.Interface.IInstance.Name">
+            <summary>
+            The name of the instance
+            </summary>
+        </member>
         <member name="P:OvenSchedulingAlgorithm.Interface.IInstance.CreationDate">
             <summary>
             The time when the instance was created

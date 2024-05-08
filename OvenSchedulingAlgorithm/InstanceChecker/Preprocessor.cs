@@ -1,15 +1,10 @@
-﻿using OvenSchedulingAlgorithm.Algorithm;
-using OvenSchedulingAlgorithm.Converter.Implementation;
-using OvenSchedulingAlgorithm.Interface;
-using NLog;
+﻿using OvenSchedulingAlgorithm.Interface;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace OvenSchedulingAlgorithm.InstanceChecker
-{   
+{
     public static class Preprocessor
     {
 

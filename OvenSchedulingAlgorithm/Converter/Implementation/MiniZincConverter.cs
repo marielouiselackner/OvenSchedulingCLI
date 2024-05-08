@@ -679,7 +679,6 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
                     size += job.Size.ToString(CultureInfo.InvariantCulture) + ",";
 
                     //attribute of job
-                    //Note: CP Optimizer data can currently not be created for Model.modelMCP with job-attributes per machine
                     //pick the first eligible machine for this jobs
                     int machineId = job.EligibleMachines.First();
                     jobAttribute += MiniZincAttributeId(job.AttributeIdPerMachine[machineId]).ToString(CultureInfo.InvariantCulture) + ",";
