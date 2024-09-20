@@ -11,7 +11,8 @@ created: 2024-05-05 22:32
 - create warmstart data from initial solution for MiniZinc or CP Optimizer
 - generate random instances 
 - calculate problem-specific lower bounds 
-- convert to .mzn/.dat format
+- convert to .dzn/.dat format
+- convert from .mzn to .json format
 - parse MiniZinc solution file
 - calculate parameters of instance (input: instance in .json format, output .json with parameters)
 
