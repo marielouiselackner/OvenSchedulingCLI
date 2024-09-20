@@ -54,6 +54,13 @@ namespace OvenSchedulingAlgorithm.Converter
         IOutput ConvertMiniZincSolutionFile(IInstance instance, string solutionFileContents);
 
         /// <summary>
+        /// Convert a given MiniZinc instance file into an OvenScheduling instance object
+        /// </summary>
+        /// <param name="instanceFileContents">The contents of the minizinc instance file that should be parsed as a string</param>
+        /// <returns>Creates instance object.</returns>
+        IInstance ConvertMiniZincInstanceToInstanceObject(string instanceFileContents);
+
+        /// <summary>
         /// Takes a dictionary of machines and returns a function that converts machine IDs to corresponding machine IDs in MiniZinc
         /// (for MiniZinc instance, machines need to be numbered from 1 to m,
         /// general Ids are distinct integers in an arbitrary range.

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using OvenSchedulingAlgorithm.Algorithm;
 using OvenSchedulingAlgorithm.InstanceChecker;
 using OvenSchedulingAlgorithm.Interface;
@@ -296,7 +297,7 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
 
             IList<IJob> jobs = instance.Jobs;
             IDictionary<int,IAttribute> attributes = instance.Attributes;
-            IDictionary<int, IMachine> machines = getEligibleMachines(jobs, instance.Machines);
+            IDictionary<int, IMachine> machines = instance.Machines; //getEligibleMachines(jobs, instance.Machines); this leads to a mismatch between the actual number of machines and m if some machine is not eligible for any job
 
             TimeSpan schedulingHorizonLength = instanceData.LengthSchedulingHorizon;
             //double-value is truncated to get int value, i.e. the schedulingHorizonLength is rounded down
@@ -1321,6 +1322,347 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
             return solution;
         }
 
-        
+        /// <summary>
+        /// Convert a given MiniZinc instance file into an OvenScheduling instance object
+        /// </summary>
+        /// <param name="instanceFileContents">The contents of the minizinc instance file that should be parsed as a string</param>
+        /// <returns>Creates instance object.</returns>
+        public IInstance ConvertMiniZincInstanceToInstanceObject(string instanceFileContents)
+        {
+            //time unit in MiniZinc file is assumed to be minutes
+            TimeSpan minute = TimeSpan.FromMinutes(1);
+            DateTime now = DateTime.Now;            
+            DateTime creaTime = new DateTime((now.Ticks + minute.Ticks - 1) / minute.Ticks * minute.Ticks, now.Kind);
+            IDictionary<int, IMachine> machines = new Dictionary<int, IMachine>();
+            int machineCount = 0;
+            int shiftCount = 0;
+            IDictionary<int, int> initialStates = new Dictionary<int, int>();
+            IList<IJob> jobs = new List<IJob>();
+            int jobCount = 0;
+            IDictionary<int, IAttribute> attributes = new Dictionary<int, IAttribute>();
+            int attributeCount = 0;
+            int schedulingHorizonMinutes = 0;
+
+            // parse MiniZinc instance
+            string[] lines = instanceFileContents.Split(new[] { "\r\n", "\r", "\n", "\\n" }, StringSplitOptions.None);
+
+            //remove trailing whitespaces and tabs
+            const string reduceMultiSpace = @"[ ]{2,}";
+            for (int i=0; i<lines.Length; i++)
+            {
+                lines[i] = Regex.Replace(lines[i].Replace("\t", " "), reduceMultiSpace, " ").Trim();
+            }
+
+            //retrieve scheduling horizon and number of machines, jobs, attributes, number of shifts
+            foreach (string line in lines)
+            {
+                if (line.StartsWith(L, StringComparison.InvariantCulture))
+                {
+                    int startIndex = line.IndexOf('=') + 1;
+                    int endIndex = line.IndexOf(';');
+                    schedulingHorizonMinutes = int.Parse(line.Substring(startIndex, endIndex - startIndex), CultureInfo.InvariantCulture);
+                }
+
+                if (line.StartsWith(A, StringComparison.InvariantCulture))
+                {
+                    int startIndex = line.IndexOf('=') + 1;
+                    int endIndex = line.IndexOf(';');
+                    attributeCount = int.Parse(line.Substring(startIndex, endIndex - startIndex), CultureInfo.InvariantCulture);
+                }
+
+                if (line.StartsWith(M, StringComparison.InvariantCulture))
+                {
+                    int startIndex = line.IndexOf('=') + 1;
+                    int endIndex = line.IndexOf(';');
+                    machineCount = int.Parse(line.Substring(startIndex, endIndex - startIndex), CultureInfo.InvariantCulture);                    
+                }
+
+                if (line.StartsWith(S, StringComparison.InvariantCulture))
+                {
+                    int startIndex = line.IndexOf('=') + 1;
+                    int endIndex = line.IndexOf(';');
+                    shiftCount = int.Parse(line.Substring(startIndex, endIndex - startIndex), CultureInfo.InvariantCulture);
+                }
+
+                if (line.StartsWith(N, StringComparison.InvariantCulture))
+                {
+                    int startIndex = line.IndexOf('=') + 1;
+                    int endIndex = line.IndexOf(';');
+                    jobCount = int.Parse(line.Substring(startIndex, endIndex - startIndex), CultureInfo.InvariantCulture);
+
+                    break;
+                }
+            }
+
+            //machines
+            string[] minCapString = new string[machineCount];
+            string[] maxCapString = new string[machineCount];
+            string[] initStateString = new string[machineCount];
+            List<string[]> machineShiftStartString = new List<string[]>();
+            List<string[]> machineShiftEndString = new List<string[]>();
+            //attributes
+            List<string[]> setupCostsString = new List<string[]>();
+            List<string[]> setupTimesString = new List<string[]>();
+            //jobs
+            List<string[]> eligibleMachineString = new List<string[]>();
+            string[] earliestStartString = new string[jobCount];
+            string[] latestEndString = new string[jobCount];
+            string[] minTimeString = new string[jobCount];
+            string[] maxTimeString = new string[jobCount];
+            string[] sizeString = new string[jobCount];
+            string[] attributeString = new string[jobCount];
+
+            //retrieve other instance data
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i];
+
+                if (line.StartsWith(MIN_CAP, StringComparison.InvariantCulture) | line.StartsWith("min_cap = ", StringComparison.InvariantCulture))
+                {
+                    int startIndex = line.IndexOf('[') + 1;
+                    int endIndex = line.IndexOf(']');
+                    minCapString = line.Substring(startIndex, endIndex - startIndex).Split(',');
+                }
+
+                if (line.StartsWith(MAX_CAP, StringComparison.InvariantCulture) | line.StartsWith("max_cap = ", StringComparison.InvariantCulture))
+                {
+                    int startIndex = line.IndexOf('[') + 1;
+                    int endIndex = line.IndexOf(']');
+                    maxCapString = line.Substring(startIndex, endIndex - startIndex).Split(',');
+                }
+
+                if (line.StartsWith(MACHINE_AVAILABILITY_START, StringComparison.InvariantCulture))
+                {
+                    int startIndex = line.IndexOf('|') + 1;
+                    int endIndex = line.Length-1;
+                    machineShiftStartString.Add(line.Substring(startIndex, endIndex - startIndex).Split(','));
+                    string nextLine = "";
+                    for (int j= 1; j < machineCount - 1; j++)
+                    {
+                        nextLine = lines[i+j];
+                        startIndex = nextLine.IndexOf('|') + 1;
+                        endIndex = nextLine.LastIndexOf(',');
+                        machineShiftStartString.Add(nextLine.Substring(startIndex, endIndex - startIndex).Split(','));
+                    }
+                    //last line
+                    nextLine = lines[i + machineCount - 1];
+                    startIndex = nextLine.IndexOf('|') + 1;
+                    endIndex = nextLine.LastIndexOf('|');
+                    machineShiftStartString.Add(nextLine.Substring(startIndex, endIndex - startIndex).Split(','));
+                }
+
+                if (line.StartsWith(MACHINE_AVAILABILITY_END, StringComparison.InvariantCulture))
+                {
+                    int startIndex = line.IndexOf('|') + 1;
+                    int endIndex = line.Length - 1;
+                    machineShiftEndString.Add(line.Substring(startIndex, endIndex - startIndex).Split(','));
+                    string nextLine = "";
+                    for (int j = 1; j < machineCount - 1; j++)
+                    {
+                        nextLine = lines[i + j];
+                        startIndex = nextLine.IndexOf('|') + 1;
+                        endIndex = nextLine.LastIndexOf(',');
+                        machineShiftEndString.Add(nextLine.Substring(startIndex, endIndex - startIndex).Split(','));
+                    }
+                    //last line
+                    nextLine = lines[i + machineCount - 1];
+                    startIndex = nextLine.IndexOf('|') + 1;
+                    endIndex = nextLine.LastIndexOf('|');
+                    machineShiftEndString.Add(nextLine.Substring(startIndex, endIndex - startIndex).Split(','));
+                }
+
+                if (line.StartsWith(INIT_STATE, StringComparison.InvariantCulture))
+                {
+                    int startIndex = line.IndexOf('[') + 1;
+                    int endIndex = line.IndexOf(']');
+                    initStateString = line.Substring(startIndex, endIndex - startIndex).Split(',');
+                }
+
+                if (line.StartsWith(SETUP_COSTS, StringComparison.InvariantCulture))
+                {
+                    int startIndex = line.IndexOf('|') + 1;
+                    int endIndex = line.Length - 1;
+                    setupCostsString.Add(line.Substring(startIndex, endIndex - startIndex).Split(','));
+                    string nextLine = "";
+                    for (int j = 1; j < attributeCount; j++)
+                    {
+                        nextLine = lines[i + j];
+                        startIndex = nextLine.IndexOf('|') + 1;
+                        endIndex = nextLine.LastIndexOf(',');
+                        setupCostsString.Add(nextLine.Substring(startIndex, endIndex - startIndex).Split(','));
+                    }
+                }
+
+                if (line.StartsWith(SETUP_TIMES, StringComparison.InvariantCulture))
+                {
+                    int startIndex = line.IndexOf('|') + 1;
+                    int endIndex = line.Length - 1;
+                    setupTimesString.Add(line.Substring(startIndex, endIndex - startIndex).Split(','));
+                    string nextLine = "";
+                    for (int j = 1; j < attributeCount; j++)
+                    {
+                        nextLine = lines[i + j];
+                        startIndex = nextLine.IndexOf('|') + 1;
+                        endIndex = nextLine.LastIndexOf(',');
+                        setupTimesString.Add(nextLine.Substring(startIndex, endIndex - startIndex).Split(','));
+                    }
+                }
+
+                if (line.StartsWith(ELIGIBLE_MACHINES, StringComparison.InvariantCulture) && lines[i+1].StartsWith('{'))
+                {
+                    int startIndex = line.IndexOf('{') + 1;
+                    int endIndex = line.IndexOf('}');
+                    eligibleMachineString.Add(line.Substring(startIndex, endIndex - startIndex).Split(','));
+                    for (int j = 1; j < jobCount; j++)
+                    {
+                        string nextLine = lines[i + j];
+                        startIndex = nextLine.IndexOf('{') + 1;
+                        endIndex = nextLine.IndexOf('}');
+                        eligibleMachineString.Add(nextLine.Substring(startIndex, endIndex - startIndex).Split(','));
+                    }
+                }
+
+                if (line.StartsWith("eligible_machine =[", StringComparison.InvariantCulture) && !(lines[i + 1].StartsWith('{')))
+                {
+                     int startIndex = line.IndexOf('[') + 1;
+                    int endIndex = line.IndexOf(']');
+                    var eligibleMachineList = line.Substring(startIndex, endIndex - startIndex).Split('}');
+                    for (int j = 0; j < jobCount; j++)
+                    {
+                        string eligibleMachines = eligibleMachineList[j];
+                        eligibleMachines = eligibleMachines.TrimStart(',',' ','{');
+                        eligibleMachineString.Add(eligibleMachines.Split(','));
+                    }
+                }
+
+                if (line.StartsWith(EARLIEST_START, StringComparison.InvariantCulture))
+                {
+                    int startIndex = line.IndexOf('[') + 1;
+                    int endIndex = line.IndexOf(']');
+                    earliestStartString = line.Substring(startIndex, endIndex - startIndex).Split(',');
+                }
+
+                if (line.StartsWith(LATEST_END, StringComparison.InvariantCulture))
+                {
+                    int startIndex = line.IndexOf('[') + 1;
+                    int endIndex = line.IndexOf(']');
+                    latestEndString = line.Substring(startIndex, endIndex - startIndex).Split(',');
+                }
+
+                if (line.StartsWith(MIN_TIME, StringComparison.InvariantCulture))
+                {
+                    int startIndex = line.IndexOf('[') + 1;
+                    int endIndex = line.IndexOf(']');
+                    minTimeString = line.Substring(startIndex, endIndex - startIndex).Split(',');
+                }
+
+                if (line.StartsWith(MAX_TIME, StringComparison.InvariantCulture))
+                {
+                    int startIndex = line.IndexOf('[') + 1;
+                    int endIndex = line.IndexOf(']');
+                    maxTimeString = line.Substring(startIndex, endIndex - startIndex).Split(',');
+                }
+
+                if (line.StartsWith(SIZE, StringComparison.InvariantCulture))
+                {
+                    int startIndex = line.IndexOf('[') + 1;
+                    int endIndex = line.IndexOf(']');
+                    sizeString = line.Substring(startIndex, endIndex - startIndex).Split(',');
+                }
+
+                if (line.StartsWith(JOB_ATTRIBUTE, StringComparison.InvariantCulture))
+                {
+                    int startIndex = line.IndexOf('[') + 1;
+                    int endIndex = line.IndexOf(']');
+                    attributeString = line.Substring(startIndex, endIndex - startIndex).Split(',');
+                }
+            }
+
+            //create attributes
+            for (int i = 0; i < attributeCount; i++)
+            {
+                List<int> setupCostsAttribute = new List<int> ();
+                List<int> setupTimesAttribute = new List<int>();
+                for (int j = 0; j < attributeCount; j++)
+                {
+                    setupCostsAttribute.Add(int.Parse(setupCostsString[i][j]));
+                    setupTimesAttribute.Add(int.Parse(setupTimesString[i][j])*60); //in seconds
+                }
+                Attribute attribute = new Attribute(i + 1,
+                    "Attribute " + (i + 1).ToString(),
+                    setupCostsAttribute,
+                    setupTimesAttribute
+                    );
+                attributes[i+1]= attribute;
+
+            }
+
+            //create initial states
+            for (int i = 0; i < initStateString.Length; i++) {
+                initialStates[i + 1] = int.Parse(initStateString[i]);
+            }
+
+            //create machines
+            for (int i = 0; i < machineCount; i++)
+            {
+                List<DateTime> availabilityStart = new List<DateTime>();
+                List<DateTime> availabilityEnd = new List<DateTime>();
+                for  (int j=0; j < shiftCount; j++)
+                {
+                    availabilityStart.Add(creaTime.AddMinutes(int.Parse(machineShiftStartString[i][j])));
+                    availabilityEnd.Add(creaTime.AddMinutes(int.Parse(machineShiftEndString[i][j])));
+                }
+
+                Machine machine = new Machine(i + 1,
+                    "Machine " + (i + 1).ToString(),
+                    int.Parse(minCapString[i]),
+                    int.Parse(maxCapString[i]),
+                    availabilityStart,
+                    availabilityEnd
+                    );
+                machines[i+1]=machine;
+            }
+
+            //create jobs
+            for (int i = 0; i < jobCount; i++)
+            {
+                Dictionary<int, int> attributeDictionary = new Dictionary<int, int>();
+                for (int j = 1; j <= machineCount; j++) 
+                    {
+                    attributeDictionary[j] = int.Parse(attributeString[i]);
+                    }
+                List<int> eligibleMachines = new List<int>();
+                for (int k = 0; k < eligibleMachineString[i].Length; k++)
+                {
+                    eligibleMachines.Add(int.Parse(eligibleMachineString[i][k]));
+                }               
+
+                Job job = new Job(i + 1,
+                    "Job " + (i + 1).ToString(),
+                    creaTime.AddMinutes(int.Parse(earliestStartString[i])),
+                    creaTime.AddMinutes(int.Parse(latestEndString[i])),
+                    int.Parse(minTimeString[i])*60, //in seconds
+                    int.Parse(maxTimeString[i])*60, //in seconds
+                    int.Parse(sizeString[i]),
+                    attributeDictionary,
+                    eligibleMachines
+                    );
+                jobs.Add(job);
+            }
+
+            IInstance instance = new Instance("OvenSchedulingInstance created from Minzinc file " + creaTime.ToString(new CultureInfo("de-DE")).Replace(':', '-'),
+                creaTime,
+                machines,
+                initialStates,
+                jobs,
+                attributes,
+                creaTime,
+                creaTime.AddMinutes(schedulingHorizonMinutes)                
+                );
+
+            return instance;
+        }
+
+
     }
 }

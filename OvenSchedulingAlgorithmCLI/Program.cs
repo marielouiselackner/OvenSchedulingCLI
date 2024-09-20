@@ -100,8 +100,23 @@ namespace OvenSchedulingAlgorithmCLI
                 return;
             }
 
+            if (!string.IsNullOrEmpty(opts.InstanceFile))
+            {
+                // parse instance object from file 
+                instance = Instance.DeserializeInstance(opts.InstanceFile);
+            }
+            else if (opts.ConvertMiniZincInstanceToJson)
+            {
+                //read minizinc instance file content and create Instance object
+                string instanceFileContents = File.ReadAllText(opts.dznFileName + ".dzn");
+                IMiniZincConverter miniZincConverter = new MiniZincConverter();
+                IInstance instance2 = miniZincConverter.ConvertMiniZincInstanceToInstanceObject(instanceFileContents);
+
+                //serialize
+                instance2.Serialize(instance2.Name + ".json");
+            }
             //create random instance
-            if ((opts.RandomInstanceJobNumber != 0 | string.IsNullOrEmpty(opts.InstanceFile))
+            else if ((opts.RandomInstanceJobNumber != 0 | string.IsNullOrEmpty(opts.InstanceFile))
                 && (string.IsNullOrEmpty(opts.WarmStartInstanceFile) | string.IsNullOrEmpty(opts.WarmStartSolutionFile)))
             {
                 Console.WriteLine("----------------------\nCreate random instance with {0} jobs, {1} machines and {2} attributes.", opts.RandomInstanceJobNumber, opts.MachineNumber, opts.AttributeNumber);
@@ -116,12 +131,7 @@ namespace OvenSchedulingAlgorithmCLI
                 instance = instanceGenerator.GenerateInstance(parameters, opts.FileNameGreedySolRandom);
                 
             }
-            else if (!string.IsNullOrEmpty(opts.InstanceFile))
-            {
-                // parse instance object from file 
-                instance = Instance.DeserializeInstance(opts.InstanceFile);
-            }     
-            
+
             if (!string.IsNullOrEmpty(opts.MiniZincSolutionFile) && !string.IsNullOrEmpty(opts.InstanceFile))
             {
                 Console.WriteLine("----------------------\nConvert and serialise minzinc solution for given instance.");

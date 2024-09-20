@@ -175,6 +175,13 @@
             <returns>Creates output consisting of a list of converted batches 
             and list of converted batch assignments for each job (if no solution could be found, the output will be empty).</returns>
         </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.IMiniZincConverter.ConvertMiniZincInstanceToInstanceObject(System.String)">
+            <summary>
+            Convert a given MiniZinc instance file into an OvenScheduling instance object
+            </summary>
+            <param name="instanceFileContents">The contents of the minizinc instance file that should be parsed as a string</param>
+            <returns>Creates instance object.</returns>
+        </member>
         <member name="M:OvenSchedulingAlgorithm.Converter.IMiniZincConverter.ConvertMachineIdToMinizinc(System.Collections.Generic.IDictionary{System.Int32,OvenSchedulingAlgorithm.Interface.IMachine})">
             <summary>
             Takes a dictionary of machines and returns a function that converts machine IDs to corresponding machine IDs in MiniZinc
@@ -330,6 +337,13 @@
             <param name="solutionFileContents">The contents of the solution file that should be parsed as a string</param>
             <returns>Creates output consisting of a list of converted batch assignments 
             (if no solution could be found, the output will be empty).</returns>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.Converter.Implementation.MiniZincConverter.ConvertMiniZincInstanceToInstanceObject(System.String)">
+            <summary>
+            Convert a given MiniZinc instance file into an OvenScheduling instance object
+            </summary>
+            <param name="instanceFileContents">The contents of the minizinc instance file that should be parsed as a string</param>
+            <returns>Creates instance object.</returns>
         </member>
         <member name="M:OvenSchedulingAlgorithm.InstanceChecker.BasicSatisfiabilityChecker.CheckSatisfiability(OvenSchedulingAlgorithm.Interface.IInstance,System.String)">
             <summary>

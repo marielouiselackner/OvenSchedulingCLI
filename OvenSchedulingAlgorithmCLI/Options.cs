@@ -58,6 +58,9 @@ namespace OvenSchedulingAlgorithmCLI
         [Option('c', Default = false, HelpText = "Convert to MiniZinc instance")]
         public bool ConvertInstanceToMiniZinc { get; set; }
 
+        [Option("cMznToJson", Default = false, HelpText = "Convert MiniZinc instance (.dzn) format to .json")]
+        public bool ConvertMiniZincInstanceToJson { get; set; }
+
         [Option("dznF", Default = "", HelpText = "Filename without ending of minizinc data file (dzn-format) or CPOptimizer data file (dat-format)")]
         public string dznFileName { get; set; }
 
