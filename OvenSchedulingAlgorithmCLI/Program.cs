@@ -110,10 +110,10 @@ namespace OvenSchedulingAlgorithmCLI
                 //read minizinc instance file content and create Instance object
                 string instanceFileContents = File.ReadAllText(opts.dznFileName + ".dzn");
                 IMiniZincConverter miniZincConverter = new MiniZincConverter();
-                IInstance instance2 = miniZincConverter.ConvertMiniZincInstanceToInstanceObject(instanceFileContents);
+                IInstance convertedInstance = miniZincConverter.ConvertMiniZincInstanceToInstanceObject(instanceFileContents);
 
                 //serialize
-                instance2.Serialize(instance2.Name + ".json");
+                convertedInstance.Serialize(opts.dznFileName + ".json");
             }
             //create random instance
             else if ((opts.RandomInstanceJobNumber != 0 | string.IsNullOrEmpty(opts.InstanceFile))
