@@ -72,12 +72,13 @@
             <param name="instance">instance of the oven scheduling problem</param>
             <returns>solution of the oven scheduling problem</returns>
         </member>
-        <member name="M:OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation.SimpleGreedyAlgorithm.RunSimpleGreedySingleJob(OvenSchedulingAlgorithm.Interface.IInstance)">
+        <member name="M:OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation.SimpleGreedyAlgorithm.ScheduleSingleJobMinimizeTardiness(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IJob)">
             <summary>
-            For an instance consisting of a single job, find a solution of the oven scheduling problem using the simple greedy algorithm
+            Schedule a single job of a given OSP instance so that it finishes as early as possible on one of its eligible machines
             </summary>
-            <param name="instance">instance of the oven scheduling problem</param>
-            <returns>solution of the oven scheduling problem</returns>
+            <param name="instance">oven scheduling instance</param>
+            <param name="job">selected job that needs to be scheduled</param>
+            <returns>Best assignment found for this job (in terms of tardiness)</returns>
         </member>
         <member name="M:OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation.SimpleGreedyAlgorithm.GetCurrentShiftOnMachine(OvenSchedulingAlgorithm.Interface.IMachine,System.DateTime)">
             <summary>
@@ -122,12 +123,13 @@
             </summary>
             <param name="instance">instance of the oven scheduling problem</param>
         </member>
-        <member name="M:OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.ISimpleGreedyAlgorithm.RunSimpleGreedySingleJob(OvenSchedulingAlgorithm.Interface.IInstance)">
+        <member name="M:OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.ISimpleGreedyAlgorithm.ScheduleSingleJobMinimizeTardiness(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.Interface.IJob)">
             <summary>
-            For an instance consisting of a single job, find a solution of the oven scheduling problem using the simple greedy algorithm
+            Schedule a single job of a given OSP instance so that it finishes as early as possible on one of its eligible machines
             </summary>
-            <param name="instance">instance of the oven scheduling problem</param>
-            <returns>solution of the oven scheduling problem</returns>
+            <param name="instance">oven scheduling instance</param>
+            <param name="job">selected job that needs to be scheduled</param>
+            <returns>Best assignment found for this job (in terms of tardiness)</returns>
         </member>
         <member name="T:OvenSchedulingAlgorithm.Converter.IMiniZincConverter">
             <summary>
@@ -569,7 +571,13 @@
         <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.LowerBoundTardyJobs">
             <summary>
             A lower bound on the number of tardy jobs
-            (calculated via procedure for lower bounds)
+            (calculated via procedure for lower bounds using a minimum cost flow problem)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.SimpleLowerBoundTardyJobs">
+            <summary>
+            A lower bound on the number of tardy jobs
+            (calculated via procedure for lower bounds scheduling every job individually)
             </summary>
         </member>
         <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.LowerBoundIntObjective">
@@ -598,7 +606,22 @@
         </member>
         <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.LowerBoundsCalculationTime">
             <summary>
-            The time required to calculate all othe rproperties of a "LowerBounds.cs" object
+            The time required to calculate all other properties of a "LowerBounds.cs" object
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.BatchAndProcTimeLowerBoundsCalculationTime">
+            <summary>
+            The time required to calculate batch count/processing time bound 
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.TardinessLowerBoundsCalculationTime">
+            <summary>
+            The time required to calculate tardiness lower bound based on minimum cost flow problem
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.SetupCostLowerBoundsCalculationTime">
+            <summary>
+            The time required to calculate setup cost lower bound based on TSP
             </summary>
         </member>
         <member name="M:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.Serialize(System.String)">
@@ -710,6 +733,16 @@
             Calculate the TimeSPan value of the constant eStar needed for the quadratic distance to latest end date. 
             </summary>
             <returns>TimeSpan value of the the constant eStar</returns>
+        </member>
+        <member name="T:OvenSchedulingAlgorithm.InstanceChecker.SetupCostsTSP">
+            <summary>
+              Minimal TSP for the setup costs objective using distance matrix.
+            </summary>
+        </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceChecker.SetupCostsTSP.PrintSolution(OvenSchedulingAlgorithm.InstanceChecker.SetupCostsTSP.DataModel,Google.OrTools.ConstraintSolver.RoutingModel@,Google.OrTools.ConstraintSolver.RoutingIndexManager@,Google.OrTools.ConstraintSolver.Assignment@)">
+            <summary>
+              Print the solution.
+            </summary>
         </member>
         <member name="T:OvenSchedulingAlgorithm.InstanceGenerator.RandomInstanceGenerator">
             <summary>

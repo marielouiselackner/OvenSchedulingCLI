@@ -5,6 +5,7 @@ using OvenSchedulingAlgorithm.Interface.Implementation;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace OvenSchedulingAlgorithm.InstanceChecker
@@ -33,20 +34,11 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             string greedyInfo = "";
 
             foreach (IJob job in instance.Jobs)
-            {                
+            {                              
 
-                //create instance consisting of this job only
-                IList<IJob> jobList = new List<IJob>
-                {
-                    job
-                };
-                IInstance singleJobInstance = new Instance("small instance", DateTime.Now, instance.Machines, 
-                    instance.InitialStates, jobList, 
-                    instance.Attributes, job.EarliestStart, instance.SchedulingHorizonEnd);
+                IBatchAssignment bestAssignmentForJob = greedyAlgo.ScheduleSingleJobMinimizeTardiness(instance, job);
 
-                IOutput greedySolution = greedyAlgo.RunSimpleGreedySingleJob(singleJobInstance);
-
-                if (greedySolution.BatchAssignments.Count == 0)
+                if (bestAssignmentForJob==null)
                 {
                     passedSatisfiabilityTest = false;
                     Console.WriteLine("Instance " + instance.Name + "is unsatisfiable. " +
@@ -55,15 +47,16 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
                     //add info to string: current job cannot be scheduled
                     greedyInfo += "Job with Id " + job.Id + " cannot be scheduled \n";
                 }
-                else if (greedySolution.BatchAssignments[0].AssignedBatch.EndTime
-                    > job.LatestEnd)
+                else if (bestAssignmentForJob.AssignedBatch.EndTime > job.LatestEnd)
                 {
                     tardyJobs += 1;
                     Console.WriteLine("Job with Id " + job.Id + " always finishes late \n");
+                    //Console.WriteLine("Earliest end time: " + bestAssignmentForJob.AssignedBatch.EndTime);
 
                     //add info to string: current job cannot be scheduled
                     greedyInfo += "Job with Id " + job.Id + " always finishes late \n";
                 }
+                
             }
 
             if (passedSatisfiabilityTest)

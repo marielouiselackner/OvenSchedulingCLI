@@ -3,10 +3,13 @@ using OvenSchedulingAlgorithm.Converter.Implementation;
 using OvenSchedulingAlgorithm.Interface;
 using OvenSchedulingAlgorithm.Interface.Implementation;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Text.RegularExpressions;
 
 namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
@@ -121,7 +124,12 @@ namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
             IDictionary<string, int> jobScheduledtoMachineDict = new Dictionary<string, int>();
 
             //earliest possible time for any job to be scheduled
-            int earliestShiftStart = (int)instance.Machines.Values.Select(x => x.AvailabilityStart.Min()).Min().Subtract(start).TotalMinutes;
+            DateTime earliestShiftStartDateTime = instance.Machines.Values.Select(x => x.AvailabilityStart.Min()).Min();
+            int earliestShiftStart = (int)earliestShiftStartDateTime.Subtract(start).TotalMinutes;
+            if (earliestShiftStart < 0)
+            {
+                earliestShiftStart = 0;
+            }
             //current time in minutes (calculated as of SchedulingHorizonStart)
             int time = earliestShiftStart - 1;
 
@@ -235,8 +243,53 @@ namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
                         instance.Attributes, lastBatchAssignmentOnMachine, instance.InitialStates);
 
                     //look for machine with minimal setup time on which job can be scheduled
-                    IMachine bestMachine = FindBestMachine(setupTimesForMachine, start.AddMinutes(time), availableMachines, currentShiftDict, nextJob.MinTime);
-                    
+                    IMachine bestMachine = null;
+                    int minSetupTime = 0;
+                    DateTime setupStart = DateTime.MinValue;
+                    while (bestMachine == null)
+                    {
+                        //if no machines are left, return null-machine
+                        if (!setupTimesForMachine.Any())
+                        {
+                           break;
+                        }
+
+                        //pick machine with minimal setup time
+                        minSetupTime = setupTimesForMachine.Values.Min();
+                        int machineId = setupTimesForMachine.First(x => x.Value == minSetupTime).Key;
+
+                        bestMachine = instance.Machines.Where(x => x.Key == machineId).Select(x => x.Value).FirstOrDefault();
+
+                        //current shift on machine
+                        int shift = currentShiftDict[bestMachine.Id].shift;
+
+                        //determine earliest time at which setup can start:                   
+                        //end of previous job on same machine
+                        DateTime endPreviousJob;
+                        if (lastBatchAssignmentOnMachine.ContainsKey(bestMachine.Id)) //batch has been scheduled to this machine)
+                        {
+                            endPreviousJob = lastBatchAssignmentOnMachine[bestMachine.Id].AssignedBatch.EndTime;
+                        }
+                        else
+                        {
+                            endPreviousJob = DateTime.MinValue;
+                        }
+                        //job can be processed as of earliest start, setup time can be before that
+                        setupStart = new[] { endPreviousJob,
+                            bestMachine.AvailabilityStart[currentShiftDict[bestMachine.Id].shift],
+                            start.AddMinutes(time).AddSeconds(-minSetupTime) }.Max();
+
+                        //check whether setup time and processing can be done within current shift of machine 
+                        if (setupStart.AddSeconds(minSetupTime + nextJob.MinTime) > bestMachine.AvailabilityEnd[shift])
+                        {
+                            //job cannot be finished within current shift
+                            //we can try on a different machine
+                            setupTimesForMachine.Remove(machineId);
+                            bestMachine = null;
+                        }
+
+                    }
+
                     //if there is no machine that can process job (due to setup + processing times), remove job from list of available jobs and continue
                     if (bestMachine == null) //no machine could be found
                     {
@@ -258,9 +311,9 @@ namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
                     //attribute of next job
                     instance.Attributes.TryGetValue(nextJob.AttributeIdPerMachine[assignedMachine.Id], out Interface.IAttribute attributeNextJob);
                     batchCount++;
-                    int setupTime = setupTimesForMachine[bestMachine.Id];
-                    IBatch assignedBatch = new Batch(batchCount, assignedMachine, start.AddMinutes(time).AddSeconds(setupTime),
-                        start.AddMinutes(time).AddSeconds(setupTime + nextJob.MinTime), attributeNextJob);
+
+                    IBatch assignedBatch = new Batch(batchCount, assignedMachine, setupStart.AddSeconds(minSetupTime),
+                        setupStart.AddSeconds(minSetupTime + nextJob.MinTime), attributeNextJob);
                     IBatchAssignment batchAssignment = new BatchAssignment(nextJob, assignedBatch);
                     batchAssignments.Add(batchAssignment);
 
@@ -312,99 +365,82 @@ namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
         }
 
         /// <summary>
-        /// For an instance consisting of a single job, find a solution of the oven scheduling problem using the simple greedy algorithm
+        /// Schedule a single job of a given OSP instance so that it finishes as early as possible on one of its eligible machines
         /// </summary>
-        /// <param name="instance">instance of the oven scheduling problem</param>
-        /// <returns>solution of the oven scheduling problem</returns>
-        public IOutput RunSimpleGreedySingleJob(IInstance instance)
+        /// <param name="instance">oven scheduling instance</param>
+        /// <param name="job">selected job that needs to be scheduled</param>
+        /// <returns>Best assignment found for this job (in terms of tardiness)</returns>
+        public IBatchAssignment ScheduleSingleJobMinimizeTardiness(IInstance instance, IJob job)
         {
+            //convert attribute IDs to 1..a
+            IMiniZincConverter converter = new MiniZincConverter();
+            Func<int, int> convertAttributeId = converter.ConvertAttributeIdToMinizinc(instance.Attributes);
+            
+
             IList<IBatchAssignment> batchAssignments = new List<IBatchAssignment>();
+            int batchCount = 0;
 
-            DateTime start = instance.SchedulingHorizonStart;
-            int l = (int)instance.SchedulingHorizonEnd.Subtract(start).TotalMinutes;
-
-            IJob job = instance.Jobs[0];
-
-            //dictionary of current shift on machines, plus info whether machine is currently in on or off shift
-            //keys are machine IDs
-            IDictionary<int, (int shift, bool onshift)> currentShiftDict = new Dictionary<int, (int, bool)>(0);
-            foreach (int machineId in instance.Machines.Keys)
+            //try scheduling job as early as possible on every eligible machine
+            foreach (int machineId in job.EligibleMachines)
             {
-                int shift = GetCurrentShiftOnMachine(instance.Machines[machineId], start);
-                bool onShift = true;
-                if (shift == -1 || instance.Machines[machineId].AvailabilityEnd[shift] < start)
+                IMachine machine = instance.Machines[machineId];
+                //check if machine capacity can fit job
+                if (machine.MaxCap < job.Size)
                 {
-                    onShift = false;
-                }
-                currentShiftDict.Add(machineId, (shift, onShift));
-            }
-
-            //current time in minutes (calculated as of SchedulingHorizonStart)
-            int time = -1;
-
-            IEnumerable<IMachine> availableMachinesForJob = Enumerable.Empty<IMachine>(); ;
-
-            while (time <= l)
-            {
-                time++;
-
-                //update current shift dict
-                foreach (int machineId in instance.Machines.Keys)
-                {
-                    int oldShift = currentShiftDict[machineId].shift;
-                    int newShift = oldShift;
-                    int i = 1;
-                    //check whether we are now in a shift after oldShift
-                    while (instance.Machines[machineId].AvailabilityStart.Count > oldShift + i
-                        && instance.Machines[machineId].AvailabilityStart[oldShift + i] <= start.AddMinutes(time))
-                    {
-                        newShift += 1;
-                        i++;
-                    }
-                    bool onShift = true;
-                    if (newShift == -1 || instance.Machines[machineId].AvailabilityEnd[newShift] < start)
-                    {
-                        onShift = false;
-                    }
-                    currentShiftDict[machineId] = (newShift, onShift);
-                }
-
-                //create list of available machines (eligible for job and in on-shift)
-                availableMachinesForJob = instance.Machines.Values.Where(machine =>
-                    job.EligibleMachines.Contains(machine.Id)
-                    && currentShiftDict[machine.Id].onshift == true
-                    && job.Size <= machine.MaxCap //size of job does not exceed machine capacity
-                    );
-
-                ////if no machines available, increase time
-                if (!availableMachinesForJob.Any())
-                {                   
                     continue;
                 }
 
-                IMachine assignedMachine = availableMachinesForJob.First();
-                IBatch assignedBatch = new Batch(1, assignedMachine, start.AddMinutes(time),
-                        start.AddMinutes(time).AddSeconds(job.MinTime), instance.Attributes[job.AttributeIdPerMachine[assignedMachine.Id]]);
-                IBatchAssignment batchAssignment = new BatchAssignment(job, assignedBatch);
-                batchAssignments.Add(batchAssignment);
+                int shiftCount = 0;
+                bool jobScheduled = false;
+                DateTime setupStart;
+                int initStateId = instance.InitialStates[machineId];
+                //TODO check: need to take minimal setup time before this job here (because we do not know if there is another job scheduled before or not)
+                int convertedAttId = convertAttributeId(job.AttributeIdPerMachine[machine.Id]) - 1;
+                int setupTime = instance.Attributes.Keys//Enumerable.Range(0, instance.Attributes.Count)
+                    .Select(x => instance.Attributes[x].SetupTimesAttribute[convertedAttId]).Min();
+                //int setupTime = instance.Attributes[initStateId].SetupTimesAttribute[convertedAttId]; //attribute Ids start at 1
+                DateTime earliestStartSetup = job.EarliestStart.AddSeconds(-setupTime);
 
-                break;
+
+
+                while (shiftCount < machine.AvailabilityStart.Count && !jobScheduled)
+                {  
+                    if (earliestStartSetup >= machine.AvailabilityEnd[shiftCount])
+                    {
+                        //job cannot be started yet in current shift
+                        shiftCount++;
+                    }
+
+                    //earliest setup start in current machine shift                   
+                    //(job can be processed as of earliest start, setup time can be before that)
+                    setupStart = new[] { machine.AvailabilityStart[shiftCount],
+                            job.EarliestStart.AddSeconds(-setupTime) }.Max();
+
+                    //check whether setup time and processing can be done within current shift of machine 
+                    if (setupStart.AddSeconds(setupTime + job.MinTime) > machine.AvailabilityEnd[shiftCount])
+                    {
+                        //job cannot be finished within current shift
+                        shiftCount++;
+                        continue;
+                    }
+
+                    //create assignment
+                    batchCount++;
+                    IBatch assignedBatch = new Batch(batchCount, machine, setupStart.AddSeconds(setupTime),
+                        setupStart.AddSeconds(setupTime + job.MinTime), instance.Attributes[job.AttributeIdPerMachine[machineId]]);
+                    IBatchAssignment batchAssignment = new BatchAssignment(job, assignedBatch);
+                    batchAssignments.Add(batchAssignment);
+                    jobScheduled = true;
+                }
+
             }
 
-            IList<SolutionType> solutionTypes = new List<SolutionType>
-            {
-                SolutionType.UnvalidatedSolution
-            };
+            //pick assignment with earliest end time
+            IBatchAssignment bestBatchAssignment = batchAssignments.Where(x => x.AssignedBatch.EndTime == batchAssignments.Select(x => x.AssignedBatch.EndTime).Min()).FirstOrDefault();
 
-
-            DateTime creaTime = DateTime.Now;
-            string outputName = "Oven Scheduling simple greedy solution for instance " + instance.Name +
-                instance.CreationDate.ToString("ddMM-HH.mm.ss", CultureInfo.InvariantCulture);
-            IOutput output = new Output(outputName, creaTime, batchAssignments, solutionTypes);
-
-            return output;
-
+            return bestBatchAssignment;
         }
+        
 
         /// <summary>
         /// Given current time and a machine, find in which shift of the machine one currently is
@@ -496,6 +532,8 @@ namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
                 //current shift on machine
                 int shift = currentShiftDict[bestMachine.Id].shift;
                     //GetCurrentShiftOnMachine(, time);
+
+                //determine earliest time at which setup can start
 
                 //check whether setup time and processing can be done within current shift of machine 
                 if (time.AddSeconds(minSetupTime + processingTime) > bestMachine.AvailabilityEnd[shift])
