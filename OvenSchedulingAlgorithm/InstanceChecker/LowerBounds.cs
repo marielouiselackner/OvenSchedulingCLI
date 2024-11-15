@@ -48,9 +48,15 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
 
         /// <summary>
         /// A lower bound on the number of tardy jobs
-        /// (calculated via procedure for lower bounds)
+        /// (calculated via procedure for lower bounds using a minimum cost flow problem)
         /// </summary>
-        public int LowerBoundTardyJobs { get; }  
+        public int LowerBoundTardyJobs { get; }
+
+        /// <summary>
+        /// A lower bound on the number of tardy jobs
+        /// (calculated via procedure for lower bounds scheduling every job individually)
+        /// </summary>
+        public int SimpleLowerBoundTardyJobs { get; }
 
         /// <summary>
         /// A lower bound on the aggregated integer-valued
@@ -77,15 +83,31 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
         public double UpperBoundRuntimeReduction { get; }
 
         /// <summary>
-        /// The time required to calculate all othe rproperties of a "LowerBounds.cs" object
+        /// The time required to calculate all other properties of a "LowerBounds.cs" object
         /// </summary>
         public TimeSpan LowerBoundsCalculationTime { get; set; }
+
+        /// <summary>
+        /// The time required to calculate batch count/processing time bound 
+        /// </summary>
+        public TimeSpan BatchAndProcTimeLowerBoundsCalculationTime { get; set; }
+
+        /// <summary>
+        /// The time required to calculate tardiness lower bound based on minimum cost flow problem
+        /// </summary>
+        public TimeSpan TardinessLowerBoundsCalculationTime { get; set; }
+
+        /// <summary>
+        /// The time required to calculate setup cost lower bound based on TSP
+        /// </summary>
+        public TimeSpan SetupCostLowerBoundsCalculationTime { get; set; }
 
         [JsonConstructor]
         public LowerBounds(int lowerBoundBatchCount, int lowerBoundTotalRuntimeSeconds, int lowerBoundTotalRuntimeMinutes, 
             int lowerBoundTotalSetupTimesSeconds, int lowerBoundTotalSetupTimesMinutes, int lowerBoundTotalSetupCosts, 
-            int lowerBoundTardyJobs, int lowerBoundIntObjective, double lowerBoundFloatObjective, 
-            double upperBoundAverageNumberOfJobsPerBatch, double upperBoundRuntimeReduction, TimeSpan lowerBoundsCalculationTime)
+            int lowerBoundTardyJobs, int simpleLowerBoundTardyJobs, int lowerBoundIntObjective, double lowerBoundFloatObjective, 
+            double upperBoundAverageNumberOfJobsPerBatch, double upperBoundRuntimeReduction, 
+            TimeSpan lowerBoundsCalculationTime, TimeSpan batchAndProcTimeLowerBoundsCalculationTime, TimeSpan tardinessLowerBoundsCalculationTime, TimeSpan setupCostLowerBoundsCalculationTime)
         {
             LowerBoundBatchCount = lowerBoundBatchCount;
             LowerBoundTotalRuntimeSeconds = lowerBoundTotalRuntimeSeconds;
@@ -94,11 +116,15 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             LowerBoundTotalSetupTimesMinutes = lowerBoundTotalSetupTimesMinutes;
             LowerBoundTotalSetupCosts = lowerBoundTotalSetupCosts;
             LowerBoundTardyJobs = lowerBoundTardyJobs;
+            SimpleLowerBoundTardyJobs = simpleLowerBoundTardyJobs;
             LowerBoundIntObjective = lowerBoundIntObjective;
             LowerBoundFloatObjective = lowerBoundFloatObjective;
             UpperBoundAverageNumberOfJobsPerBatch = upperBoundAverageNumberOfJobsPerBatch;
             UpperBoundRuntimeReduction = upperBoundRuntimeReduction;
             LowerBoundsCalculationTime = lowerBoundsCalculationTime;
+            BatchAndProcTimeLowerBoundsCalculationTime = batchAndProcTimeLowerBoundsCalculationTime;
+            TardinessLowerBoundsCalculationTime = tardinessLowerBoundsCalculationTime;
+            SetupCostLowerBoundsCalculationTime = setupCostLowerBoundsCalculationTime;
         }
 
         /// <summary>

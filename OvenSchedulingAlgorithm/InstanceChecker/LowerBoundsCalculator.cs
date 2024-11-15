@@ -26,7 +26,8 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
         public static LowerBounds CalculateLowerBounds(IInstance instance, InstanceData instanceData,
             IAlgorithmConfig config)
         {
-            //lower bounds
+            //lower bounds on batch count and processing time
+            DateTime beforebatchCount = DateTime.Now;
             int lowerBoundBatchCount = 0;
             int lowerBoundTotalRuntimeSeconds = 0;
             List<(int, IList<int>)> eligMachBatches = new List<(int, IList<int>)>();
@@ -41,7 +42,21 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             int lowerBoundTotalRuntimeMinutes = (lowerBoundTotalRuntimeSeconds + 59) / 60;
             int lowerBoundTotalSetupTimesSeconds = 0;
             int lowerBoundTotalSetupTimesMinutes = 0;
-            int lowerBoundTotalSetupCosts = CalculateSimpleLowerBoundSetupCost(instance, eligMachBatches);
+            DateTime afterBatchCount = DateTime.Now;
+            TimeSpan batchAndProcTimeLowerBounds = afterBatchCount - beforebatchCount;
+
+            //bounds on setup costs based on TSP model
+            DateTime beforeSetupCosts = DateTime.Now;
+            int lowerBoundTotalSetupCosts = (int)SetupCostsTSP.ComputeLowerBoundSetupCostsWithTSP(instance);
+            //CalculateSimpleLowerBoundSetupCost(instance, eligMachBatches);
+            DateTime afterSetupCosts = DateTime.Now;
+            TimeSpan setupCostsRuntimeLowerBounds = afterSetupCosts - beforeSetupCosts;
+
+            //bounds on tardiness based on minimum cost flow problem
+            DateTime beforeTardiness = DateTime.Now;
+            int lowerBoundTardyJobs = 0; //TODO: integrate Francesca's code here 
+            DateTime afterTardiness = DateTime.Now;
+            TimeSpan tardinessRuntimeLowerBounds = afterTardiness - beforeTardiness;
 
 
             IOutput solution = new Output();
@@ -65,12 +80,16 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
                 lowerBoundTotalSetupTimesSeconds,
                 lowerBoundTotalSetupTimesMinutes,
                 lowerBoundTotalSetupCosts,
+                lowerBoundTardyJobs,
                 instanceData.LowerBoundTardyJobs,
                 0,
                 components.ObjectiveValue,
                 upperBoundAverageNumberOfJobsPerBatch,
                 upperBoundRuntimeReduction,
-                new TimeSpan()
+                new TimeSpan(),
+                batchAndProcTimeLowerBounds,
+                tardinessRuntimeLowerBounds,
+                setupCostsRuntimeLowerBounds
                 );
 
             return lb;
@@ -151,7 +170,8 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
         /// <param name="attributeId"></param>
         /// <returns>The calculated minimum number of batches required, the calculated minimal processing time of batches,
         /// and the list of batches together with their eligible machines.</returns>
-        private static (int minbatchCount, int minProcTimeSeconds, IList<(int, IList<int>)> eligibleMachBatches)
+        //TODO change back to private
+        public static (int minbatchCount, int minProcTimeSeconds, IList<(int, IList<int>)> eligibleMachBatches)
             CalculateMinBatchCountProcTime(IInstance instance, int attributeId)
         {
             //list of eligible machines of batches (required for calculation of minimal setup costs/times)
