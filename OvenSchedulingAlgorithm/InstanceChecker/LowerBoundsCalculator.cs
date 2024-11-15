@@ -47,7 +47,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
 
             //bounds on setup costs based on TSP model
             DateTime beforeSetupCosts = DateTime.Now;
-            int lowerBoundTotalSetupCosts = (int)SetupCostsTSP.ComputeLowerBoundSetupCostsWithTSP(instance);
+            int lowerBoundTotalSetupCosts = (int)SetupCostsTSP.ComputeLowerBoundSetupCostsWithTSP(instance, eligMachBatches);
             //CalculateSimpleLowerBoundSetupCost(instance, eligMachBatches);
             DateTime afterSetupCosts = DateTime.Now;
             TimeSpan setupCostsRuntimeLowerBounds = afterSetupCosts - beforeSetupCosts;
@@ -170,7 +170,6 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
         /// <param name="attributeId"></param>
         /// <returns>The calculated minimum number of batches required, the calculated minimal processing time of batches,
         /// and the list of batches together with their eligible machines.</returns>
-        //TODO change back to private
         public static (int minbatchCount, int minProcTimeSeconds, IList<(int, IList<int>)> eligibleMachBatches)
             CalculateMinBatchCountProcTime(IInstance instance, int attributeId)
         {

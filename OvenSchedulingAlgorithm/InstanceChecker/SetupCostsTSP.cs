@@ -78,8 +78,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             return data;
     }
 
-        //TODO use lowerbounds calculation directly (so that this does not need to be done multiple times)
-        public static DataModel CreateTSPData(IInstance instance)
+        public static DataModel CreateTSPData(IInstance instance, List<(int attId, IList<int> eligMachines)> eligMachBatches)
         {
             //check if triangle inequality holds for setup costs, if not adapt setup costs so that it holds
             IInstance corrInstance = FulfillTriangleInequalitySetpCosts(instance);
@@ -89,14 +88,15 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             int[] endLocations = Enumerable.Range(0, vehicleNumber).ToArray();
 
             //lower bounds       
-            List<(int attId, IList<int> eligMachines)> eligMachBatches = new List<(int, IList<int>)>();
-            for (int i = 0; i < corrInstance.Attributes.Count; i++)
-            {
-                int attributeId = corrInstance.Attributes.Keys.ToList()[i];                
-                IList<(int, IList<int>)> eligibleMachBatchesForAtt = LowerBoundsCalculator.CalculateMinBatchCountProcTime(corrInstance, attributeId).eligibleMachBatches;
-                eligMachBatches.AddRange(eligibleMachBatchesForAtt);
-            }
-          
+            //no longer needed, we get lower bounds from LowerBoundsCalculator
+            //List<(int attId, IList<int> eligMachines)> eligMachBatches = new List<(int, IList<int>)>();
+            //for (int i = 0; i < corrInstance.Attributes.Count; i++)
+            //{
+            //    int attributeId = corrInstance.Attributes.Keys.ToList()[i];
+            //    IList<(int, IList<int>)> eligibleMachBatchesForAtt = LowerBoundsCalculator.CalculateMinBatchCountProcTime(corrInstance, attributeId).eligibleMachBatches;
+            //    eligMachBatches.AddRange(eligibleMachBatchesForAtt);
+            //}
+
             Dictionary<int, int[]> eligibleVehicles = new Dictionary<int, int[]>();
             for  (int i = 0; i < eligMachBatches.Count; i++)
             {
@@ -169,10 +169,10 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             }            
         }
 
-        public static long ComputeLowerBoundSetupCostsWithTSP(IInstance instance)
+        public static long ComputeLowerBoundSetupCostsWithTSP(IInstance instance, List<(int, IList<int>)> eligMachBatches)
         {
             // Instantiate the data problem.
-            DataModel data = CreateTSPData(instance);
+            DataModel data = CreateTSPData(instance, eligMachBatches);
 
             // Create Routing Index Manager
             RoutingIndexManager manager =
@@ -221,7 +221,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             // Print solution on console.
             PrintSolution(data, routing, manager, solution);
 
-            //TODO return value of solutionas lower bound for setup costs
+            //return value of solution as lower bound for setup costs
             long bound = 0;
             int status = routing.GetStatus();
             if (status == 1 || status == 2 || status == 7) //found an optimal solution or found a feasible solution without optimality proof

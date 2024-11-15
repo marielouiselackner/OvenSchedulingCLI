@@ -394,7 +394,7 @@ namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
                 bool jobScheduled = false;
                 DateTime setupStart;
                 int initStateId = instance.InitialStates[machineId];
-                //TODO check: need to take minimal setup time before this job here (because we do not know if there is another job scheduled before or not)
+                // need to take minimal setup time before this job here (because we do not know if there is another job scheduled before or not)
                 int convertedAttId = convertAttributeId(job.AttributeIdPerMachine[machine.Id]) - 1;
                 int setupTime = instance.Attributes.Keys//Enumerable.Range(0, instance.Attributes.Count)
                     .Select(x => instance.Attributes[x].SetupTimesAttribute[convertedAttId]).Min();
