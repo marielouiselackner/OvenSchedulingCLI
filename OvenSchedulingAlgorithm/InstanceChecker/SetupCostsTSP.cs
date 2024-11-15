@@ -76,7 +76,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             DataModel data = new DataModel(distanceMatrix, vehicleNumber, startLocations, endLocations, eligibleVehicles);
 
             return data;
-    }
+        }
 
         public static DataModel CreateTSPData(IInstance instance, List<(int attId, IList<int> eligMachines)> eligMachBatches)
         {

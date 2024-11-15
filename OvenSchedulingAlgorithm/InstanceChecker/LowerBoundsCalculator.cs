@@ -54,7 +54,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
 
             //bounds on tardiness based on minimum cost flow problem
             DateTime beforeTardiness = DateTime.Now;
-            int lowerBoundTardyJobs = 0; //TODO: integrate Francesca's code here 
+            int lowerBoundTardyJobs = (int) TardinessMCF.ComputeLowerBoundTardinessWithMCF(instance); //TODO: integrate Francesca's code here 
             DateTime afterTardiness = DateTime.Now;
             TimeSpan tardinessRuntimeLowerBounds = afterTardiness - beforeTardiness;
 
