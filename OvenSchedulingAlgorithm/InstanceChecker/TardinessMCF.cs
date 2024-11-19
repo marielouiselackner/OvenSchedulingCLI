@@ -243,7 +243,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             if (status == MinCostFlow.Status.OPTIMAL)
             {
                 double myCost = (double) ((minCostFlow.OptimalCost())/1000000.0);
-                tardiness = Convert.ToInt64(myCost);
+                tardiness = Convert.ToInt64(Math.Ceiling(myCost));
             }
             // else, LB set to the minimum, that is 0
 
