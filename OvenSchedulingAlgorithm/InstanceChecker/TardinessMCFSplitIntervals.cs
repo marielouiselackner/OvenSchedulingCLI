@@ -56,6 +56,14 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             maxMinTime = maxMinTime + maxSetupTime;
 
             int machineIntervals = 0;
+            int maxShiftNumber = 0;
+            foreach (int machineId in instance.Machines.Keys)
+            {
+                if (instance.Machines[machineId].AvailabilityStart.Count > maxShiftNumber)
+                {
+                    maxShiftNumber = instance.Machines[machineId].AvailabilityStart.Count;
+                }
+            }
             foreach (int machineId in instance.Machines.Keys)
             {
                 for (int shiftId = 0; shiftId < instance.Machines[machineId].AvailabilityStart.Count; shiftId++)
@@ -70,7 +78,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
                     //       2               1       15 --> (10 + (2-1)*3 + 1 + 1)
                     //       2               2       16 --> (10 + (2-1)*3 + 2 + 1)
                     machineIntervals = machineIntervals + 1;
-                    int nodeId = instance.Jobs.Count + (machineId - 1) * instance.Machines[machineId].AvailabilityStart.Count + shiftId + 1;
+                    int nodeId = instance.Jobs.Count + (machineId - 1) * maxShiftNumber + shiftId + 1;
                     machineIntervalNodeAssignedJobs.Add(nodeId, new SortedSet<int>()); //TODO Francesca: error "An item with the same key has already been added."
                     machineIntervalNodeMinSetupAndProcessingTime.Add(nodeId, maxMinTime);
                     int lengthInterval = (int)
@@ -124,7 +132,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
                         }
                         // If you reach this stage you know that there is an edge between the job and the machine-interval
                         // Thus you can update the machineIntervalNode data structures
-                        int nodeId = instance.Jobs.Count + (machineId - 1) * instance.Machines[machineId].AvailabilityStart.Count + shiftId + 1;
+                        int nodeId = instance.Jobs.Count + (machineId - 1) * maxShiftNumber + shiftId + 1;
                         machineIntervalNodeAssignedJobs[nodeId].Add(job.Id);
                         int processingTime = job.MinTime + setupTime;
                         if (machineIntervalNodeMinSetupAndProcessingTime[nodeId] > processingTime)
