@@ -87,16 +87,6 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             int[] startLocations = Enumerable.Range(0, vehicleNumber).ToArray();
             int[] endLocations = Enumerable.Range(0, vehicleNumber).ToArray();
 
-            //lower bounds       
-            //no longer needed, we get lower bounds from LowerBoundsCalculator
-            //List<(int attId, IList<int> eligMachines)> eligMachBatches = new List<(int, IList<int>)>();
-            //for (int i = 0; i < corrInstance.Attributes.Count; i++)
-            //{
-            //    int attributeId = corrInstance.Attributes.Keys.ToList()[i];
-            //    IList<(int, IList<int>)> eligibleMachBatchesForAtt = LowerBoundsCalculator.CalculateMinBatchCountProcTime(corrInstance, attributeId).eligibleMachBatches;
-            //    eligMachBatches.AddRange(eligibleMachBatchesForAtt);
-            //}
-
             Dictionary<int, int[]> eligibleVehicles = new Dictionary<int, int[]>();
             for  (int i = 0; i < eligMachBatches.Count; i++)
             {
@@ -136,9 +126,10 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
         {
             int status = routing.GetStatus();
             if (status == 1 || status ==2 || status == 7) //found an optimal solution or found a feasible solution without optimality proof
-                //don't know whta status 7 is (solution with value=0?)
+                //don't know what status 7 is (solution with value=0?)
             {
                 Console.WriteLine("Objective: {0}", solution.ObjectiveValue());
+#if DEBUG
                 // Inspect solution.
                 long totalRouteDistance = 0;
                 for (int i = 0; i < data.VehicleNumber; ++i)
@@ -157,7 +148,10 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
                     Console.WriteLine("Distance of the route: {0}", routeDistance);
                     totalRouteDistance += routeDistance;
                 }
+
                 Console.WriteLine("Total Route distance: {0}", totalRouteDistance);
+#else
+#endif
             }
             else
             {
@@ -210,13 +204,16 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             RoutingSearchParameters searchParameters =
                 operations_research_constraint_solver.DefaultRoutingSearchParameters();
             searchParameters.FirstSolutionStrategy = FirstSolutionStrategy.Types.Value.PathCheapestArc;
+#if DEBUG
             searchParameters.LogSearch = true;
+#else
+#endif
 
             // Solve the problem.
             Assignment solution = routing.SolveWithParameters(searchParameters);
 
             //Print solver status
-            Console.WriteLine("Solver status: {0}", routing.GetStatus().ToString());
+            Console.WriteLine("Solver status (TSP for setup costs): {0}", routing.GetStatus().ToString());
 
             // Print solution on console.
             PrintSolution(data, routing, manager, solution);

@@ -214,7 +214,7 @@ namespace OvenSchedulingAlgorithmCLI
 
             if (opts.CalculateLowerBounds)
             {
-                Console.WriteLine("----------------------\nCalculating problem-specific lower bounds for instance.");
+                Console.WriteLine("----------------------\nCalculating problem-specific lower bounds for instance {0}.", instance.Name);
                 DateTime startLowerBounds = DateTime.Now;
 
                 InstanceData instanceData = Preprocessor.DoPreprocessing(

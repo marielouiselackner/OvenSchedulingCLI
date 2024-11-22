@@ -1,4 +1,5 @@
-﻿using OvenSchedulingAlgorithm.Converter.Implementation;
+﻿using Google.OrTools.LinearSolver;
+using OvenSchedulingAlgorithm.Converter.Implementation;
 using OvenSchedulingAlgorithm.Interface;
 using OvenSchedulingAlgorithm.Interface.Implementation;
 using OvenSchedulingAlgorithm.Objective;
@@ -7,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using static Google.OrTools.ConstraintSolver.RoutingModel.ResourceGroup;
 
 namespace OvenSchedulingAlgorithm.InstanceChecker
 {
@@ -28,8 +30,9 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
         {
             //lower bounds on batch count and processing time
             DateTime beforebatchCount = DateTime.Now;
+            //lower bound based on bin packing, small jobs, eligible machines and compatible processing times
             int lowerBoundBatchCount = 0;
-            int lowerBoundTotalRuntimeSeconds = 0;
+            int lowerBoundTotalRuntimeSeconds = 0;            
             List<(int, IList<int>)> eligMachBatches = new List<(int, IList<int>)>();
             for (int i = 0; i < instance.Attributes.Count; i++)
             {
@@ -41,6 +44,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             }
             int lowerBoundTotalRuntimeMinutes = (lowerBoundTotalRuntimeSeconds + 59) / 60;
             int lowerBoundTotalSetupTimesSeconds = 0;
+            Console.WriteLine("=====");
             int lowerBoundTotalSetupTimesMinutes = 0;
             DateTime afterBatchCount = DateTime.Now;
             TimeSpan batchAndProcTimeLowerBounds = afterBatchCount - beforebatchCount;
@@ -54,7 +58,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
 
             //bounds on tardiness based on minimum cost flow problem
             DateTime beforeTardiness = DateTime.Now;
-            int lowerBoundTardyJobs = (int) TardinessMCF.ComputeLowerBoundTardinessWithMCF(instance); //TODO: integrate Francesca's code here 
+            int lowerBoundTardyJobs = (int) TardinessMCF.ComputeLowerBoundTardinessWithMCF(instance); 
             DateTime afterTardiness = DateTime.Now;
             TimeSpan tardinessRuntimeLowerBounds = afterTardiness - beforeTardiness;
 
@@ -95,6 +99,108 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             return lb;
 
             
+        }
+
+        private static int CalculateLowerBoundBinPacking(IInstance instance)
+        {
+            int lowerBoundBinPacking = 0;
+            int maxCap = instance.Machines.Select(m => m.Value.MaxCap).Max();
+            for (int i = 0; i < instance.Attributes.Count; i++)
+            {
+                int attributeId = instance.Attributes.Keys.ToList()[i];
+                int lowerBoundAtt = 0;
+                var jobsAtt = instance.Jobs.Where(j => j.AttributeIdPerMachine.FirstOrDefault().Value == attributeId);
+                //bound L2 from Martello, S., & Toth, P. (1990). Lower bounds and reduction procedures for the bin packing problem. Discrete applied mathematics, 28(1), 59-70.
+                for (int k= 0; k < maxCap /2 +1 ; k++)
+                {
+                    List<int> N_1 = jobsAtt.Where(j => j.Size > maxCap - k).Select(j => j.Size).ToList();
+                    List<int> N_2 = jobsAtt.Where(j => j.Size <= maxCap - k && j.Size > maxCap/2).Select(j => j.Size).ToList();
+                    List<int> N_3 = jobsAtt.Where(j => j.Size >= k && j.Size <= maxCap / 2).Select(j => j.Size).ToList();
+                    List<int> N_4 = jobsAtt.Where(j => j.Size < k).Select(j => j.Size).ToList();
+
+                    int extraBatchesN3 = (int)Math.Max(0, Math.Ceiling(
+                        (double)(N_3.Sum() - (N_2.Count * maxCap - N_2.Sum())) / maxCap));
+                    int L2 = N_1.Count + N_2.Count + extraBatchesN3;
+
+                    int remainingCapTinyJobs = N_1.Select(x => maxCap - x).Sum() + (N_2.Count + extraBatchesN3)*maxCap - N_2.Sum() - N_3.Sum();
+                    int extraBatchesTinyJobs = (int)Math.Max(0, Math.Ceiling((double)(N_4.Sum() - remainingCapTinyJobs) / maxCap));
+                    lowerBoundAtt = Math.Max(lowerBoundAtt, L2 + extraBatchesTinyJobs);
+                }
+                lowerBoundBinPacking += lowerBoundAtt;
+            }
+
+            return lowerBoundBinPacking;
+            
+        }
+
+        private static int CalculateLowerBoundBinPackingEligMachine(IInstance instance)
+        {
+            int lowerBoundBinPacking = 0;
+            //list of eligible machines of batches (required for calculation of minimal setup costs/times)
+            IList<(int, IList<int>)> eligibleMachBatches = new List<(int, IList<int>)>();
+            
+            for (int i = 0; i < instance.Attributes.Count; i++)
+            {
+                int attributeId = instance.Attributes.Keys.ToList()[i];
+                var lowerBoundBinPackingElMach = CalculateLowerBoundBinPackingEligMachineAttribute(instance, attributeId);
+
+                lowerBoundBinPacking += lowerBoundBinPackingElMach.lowerBoundAtt;
+            }
+
+            return lowerBoundBinPacking;
+
+        }
+
+        private static (int lowerBoundAtt, int minProcTimeSeconds, IList<(int, IList<int>)> eligibleMachBatches) CalculateLowerBoundBinPackingEligMachineAttribute(IInstance instance, int attributeId)
+        {
+            int lowerBoundAtt = 0;
+            int minProcTimeSeconds = 0;
+            IList<(int, IList<int>)> eligibleMachBatches = new List<(int, IList<int>)>();
+            //jobs with the given attribute Id 
+            //note: we assume that attributes are the same on all machines
+            var jobsAtt = instance.Jobs.Where(j => j.AttributeIdPerMachine.FirstOrDefault().Value == attributeId);
+            if (!jobsAtt.Any())
+            {
+                return (lowerBoundAtt, minProcTimeSeconds, eligibleMachBatches);
+            }
+
+            //bound L2 from Martello, S., & Toth, P. (1990). Lower bounds and reduction procedures for the bin packing problem. Discrete applied mathematics, 28(1), 59-70.
+            int maxCap = instance.Machines.Select(m => m.Value.MaxCap).Max();
+            for (int k = 0; k < maxCap / 2 + 1; k++)
+            {
+                //jobs that are so large that eligible machine with maximal machine capacity 
+                //cannot process any other jobs from N1, N2, N3 at the same time
+                List<IJob> N_1 = jobsAtt
+                    .Where(j => j.Size > maxCap - k)
+                    .ToList();
+                //one batch needed per large job
+                int minbatchCount = N_1.Count();
+                foreach (var job in N_1)
+                {
+                    minProcTimeSeconds += job.MinTime;
+                    eligibleMachBatches.Add((attributeId, job.EligibleMachines));
+                }
+
+                List<IJob> N_2 = jobsAtt.Where(j => j.Size <= maxCap - k && j.Size > maxCap / 2).ToList();
+                List<IJob> N_3 = jobsAtt.Where(j => j.Size >= k && j.Size <= maxCap / 2).ToList();
+
+                //calculate number of batches and minimal processing time needed for jobs in N2 and N3
+                //based on eligible machines
+                var boundsSmallMediumJobsEligMachines = GetBoundsMediumAndSmallJobsEligMachines(N_3, N_2, instance.Machines, maxCap);
+
+                //int L2 = N_1.Count + N_2.Count + (int)Math.Max(0, Math.Ceiling((double)(N_3.Select(j => j.Size).Sum() - (N_2.Count * maxCap - N_2.Select(j => j.Size).Sum())) / maxCap));
+                if (minbatchCount + boundsSmallMediumJobsEligMachines.minbatchCount > lowerBoundAtt)
+                {
+                    lowerBoundAtt = minbatchCount + boundsSmallMediumJobsEligMachines.minbatchCount;
+                    minProcTimeSeconds = boundsSmallMediumJobsEligMachines.minProcTimeSeconds;
+                    for (int i = 0; i < boundsSmallMediumJobsEligMachines.eligibleMachBatches.Count; i++)
+                    {
+                        eligibleMachBatches.Add((attributeId, boundsSmallMediumJobsEligMachines.eligibleMachBatches[i]));
+                    }
+                }              
+            }
+
+            return (lowerBoundAtt, minProcTimeSeconds, eligibleMachBatches);
         }
 
         /// <summary>
@@ -217,8 +323,10 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             //add batches for small jobs to eligibleMachBatches: take maximum value of batches 
             //if value from boundsSmallJobsCompProcTimes is chosen, take all eligible machines, 
             //otherwise take list provided by boundsSmallJobsEligMachines
+            string bestBound = "eligible machines";
             if (boundsSmallJobsEligMachines.minbatchCount < boundsSmallJobsCompProcTimes.minbatchCount)
             {
+                bestBound = "processing times";
                 IList<int> allMach = instance.Machines.Keys.ToList();
                 for (int i = 0; i < boundsSmallJobsCompProcTimes.minbatchCount; i++)
                 {
@@ -233,7 +341,27 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
                 }
             }
 
-            return (minbatchCount, minProcTimeSeconds, eligibleMachBatches);
+            //compare lower bound with bound
+            //based on bin packing bound from Martello and Toth + eligibel machines
+            var boundsBinPackingEligMachines = CalculateLowerBoundBinPackingEligMachineAttribute(instance, attributeId);
+            if (minbatchCount < boundsBinPackingEligMachines.lowerBoundAtt)
+            {
+#if DEBUG
+                bestBound = "bin packing + eligible machines";
+                Console.WriteLine("Best bound for attribute {0} found by {1}", attributeId, bestBound);
+#else
+#endif
+                return boundsBinPackingEligMachines;
+            }
+            else
+            {
+#if DEBUG
+                Console.WriteLine("Best bound for attribute {0} found by {1}", attributeId, bestBound);
+#else
+#endif
+                return (minbatchCount, minProcTimeSeconds, eligibleMachBatches);
+            }
+            
         }
 
         /// <summary>
@@ -346,6 +474,137 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             }
             
             //add processing times of all small batches to minProcTimeSeconds
+            foreach (int time in procTimes)
+            {
+                minProcTimeSeconds += time;
+            }
+
+            //add extraBatches many entries to list of eligible machines;
+            //for these entries, consider all machines to be eligible
+            IList<int> allMach = machines.Keys.ToList();
+            for (int i = 0; i < extraBatches; i++)
+            {
+                eligibleMachBatches.Add(allMach);
+            }
+
+
+            return (minbatchCount, minProcTimeSeconds, eligibleMachBatches);
+        }
+
+        /// <summary>
+        /// Given a set of small and medium-sized jobs (sets N2 and N3 from the bin packing bound by Martello et al), a dictionary of machines together with the overall max machine capacity, 
+        /// find the minimum number of batches required to schedule all jobs based on the eligible machines of the jobs.
+        /// For these batches, compute the minimal processing time as well.
+        /// </summary>
+        /// <param name="smallJobs"></param>
+        /// <param name="mediumJobs"></param>
+        /// <param name="machines"></param>
+        /// <param name="maxCap"></param>
+        /// <returns>(minimum number of batches required, minimal batch processing time, list of eligible machines of batches)</returns>
+        private static (int minbatchCount, int minProcTimeSeconds, IList<IList<int>> eligibleMachBatches)
+            GetBoundsMediumAndSmallJobsEligMachines(IEnumerable<IJob> smallJobs, IEnumerable<IJob> mediumJobs, IDictionary<int, IMachine> machines, int maxCap)
+        {
+            int minbatchCount = 0;
+            int minProcTimeSeconds = 0;
+
+            //list of eligible machines of batches (required for calculation of minimal setup costs)
+            IList<IList<int>> eligibleMachBatches = new List<IList<int>>();
+
+            var smallJobsSingleMachine = smallJobs.Where(job => job.EligibleMachines.Count == 1);
+            var mediumJobsSingleMachine = mediumJobs.Where(job => job.EligibleMachines.Count == 1);
+            int totalFreeCapacity = 0;
+            List<int> procTimes = new List<int>();
+            //all medium jobs that can be processed on a single machine, are scheduled on this machine
+            if (mediumJobsSingleMachine.Any() || smallJobsSingleMachine.Any())
+            {
+                foreach (int machine in machines.Keys)
+                {
+                    var smallJobsThisMachine = smallJobsSingleMachine.Where(job => job.EligibleMachines.Contains(machine));
+                    var mediumJobsThisMachine = mediumJobsSingleMachine.Where(job => job.EligibleMachines.Contains(machine));
+                    if (!smallJobsThisMachine.Any() && !mediumJobsThisMachine.Any())
+                    {
+                        continue;
+                    }
+
+                    //number of batches for medium jobs that need to be scheduled on this machine
+                    minbatchCount += mediumJobsThisMachine.Count();
+                    int freeCapacityThisMachineForSmallJobs = mediumJobsThisMachine.Select(j => machines[machine].MaxCap - j.Size).Sum();
+
+                    //number of batches needed for small jobs
+                    int batchSize = smallJobsThisMachine.Select(j => j.Size).Sum();
+                    int remainingCapacityAfterAddingSmallJobs = freeCapacityThisMachineForSmallJobs - batchSize;
+                    int smallJobsNotFitting = Math.Max(-remainingCapacityAfterAddingSmallJobs, 0);
+                    //number of additional batches required for small jobs                   
+                    int batchBoundInt = (int)Math.Ceiling((double)smallJobsNotFitting / machines[machine].MaxCap);
+
+                    minbatchCount += batchBoundInt;
+                    //add batches with their eligible machine to list
+                    List<int> eligMach = new List<int>();
+                    eligMach.Add(machine);
+                    for (int i = 0; i < mediumJobsThisMachine.Count() + batchBoundInt; i++)
+                    {
+                        eligibleMachBatches.Add(eligMach);
+                    }
+
+                    int freeCapacityThisMachine = Math.Max(remainingCapacityAfterAddingSmallJobs,0) + batchBoundInt * machines[machine].MaxCap - smallJobsNotFitting;
+                    totalFreeCapacity += freeCapacityThisMachine;
+
+
+                    //list of all minimal processing times of jobs that need to be processed on this machine 
+                    var allProcTimesThisMachine = smallJobsThisMachine.Select(j => j.MinTime).ToList()
+                        .Concat(mediumJobsThisMachine.Select(j => j.MinTime).ToList()).ToList();
+                    allProcTimesThisMachine.Sort();
+                    //add batchBoundInt many proc times to list of proc times
+                    procTimes.Add(allProcTimesThisMachine.Max());
+                    for (int i = 0; i < batchBoundInt - 1; i++)
+                    {
+                        procTimes.Add(allProcTimesThisMachine[i]);
+                    }
+                }
+            }
+
+            //what to do with the jobs that can be scheduled on more than one machine?
+            //Note: mediumsized jobs do not necessarily need batch of their own,
+            //since they could go in one of the extra batches created for small jobs that can only be scheduled on a single machine
+            //use the free capacity for all small and medium jobs and calculate number of extra batches needed 
+            //assuming that all other jobs can be scheduled on machine with largest capacity
+            //total size of jobs that still need to be scheduled (or 0, if all can been added to previous batches)
+            int mediumJobsMultipleMachinesSize = mediumJobs.Where(job => !mediumJobsSingleMachine.Contains(job)).Select(j => j.Size).Sum();
+            int smallJobsMultipleMachinesSize = smallJobs.Where(job => !smallJobsSingleMachine.Contains(job)).Select(j => j.Size).Sum();
+            int remainingJobsSize = Math.Max(0, mediumJobsMultipleMachinesSize + smallJobsMultipleMachinesSize - totalFreeCapacity);
+            int extraBatches = (int)Math.Ceiling((double)remainingJobsSize / maxCap);
+            minbatchCount += extraBatches;
+
+            //list of all minimal processing times of jobs that can be processed on multiple machines (small and meidum)
+            var allProcTimes = smallJobs
+                .Where(job => !smallJobsSingleMachine.Contains(job)).Select(j => j.MinTime).ToList()
+                .Concat(mediumJobs.Where(job => !mediumJobsSingleMachine.Contains(job)).Select(j => j.MinTime).ToList()).ToList();
+            allProcTimes.Sort();
+            procTimes.Sort();
+            //add extraBatches many proc times to list of proc times
+            int batchesToAdd = extraBatches;
+            //check if max of allProcTimes is larger than max(procTimes)
+            if (allProcTimes.Any())
+            {
+                int maxProcTime = allProcTimes[allProcTimes.Count - 1];
+                if (procTimes.Any() && maxProcTime > procTimes[procTimes.Count - 1])
+                {
+                    procTimes[procTimes.Count - 1] = maxProcTime;
+                    batchesToAdd -= 1;
+                }
+                else if (!procTimes.Any())
+                {
+                    procTimes.Add(maxProcTime);
+                    batchesToAdd -= 1;
+                }
+
+                for (int i = 0; i < batchesToAdd; i++)
+                {
+                    procTimes.Add(allProcTimes[i]);
+                }
+            }
+
+            //add processing times of all small and medium sized batches to minProcTimeSeconds
             foreach (int time in procTimes)
             {
                 minProcTimeSeconds += time;

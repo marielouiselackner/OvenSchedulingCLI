@@ -674,6 +674,18 @@
             <param name="maxCap"></param>
             <returns>(minimum number of batches required, minimal batch processing time, list of eligible machines of batches)</returns>
         </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceChecker.LowerBoundsCalculator.GetBoundsMediumAndSmallJobsEligMachines(System.Collections.Generic.IEnumerable{OvenSchedulingAlgorithm.Interface.IJob},System.Collections.Generic.IEnumerable{OvenSchedulingAlgorithm.Interface.IJob},System.Collections.Generic.IDictionary{System.Int32,OvenSchedulingAlgorithm.Interface.IMachine},System.Int32)">
+            <summary>
+            Given a set of small and medium-sized jobs (sets N2 and N3 from the bin packing bound by Martello et al), a dictionary of machines together with the overall max machine capacity, 
+            find the minimum number of batches required to schedule all jobs based on the eligible machines of the jobs.
+            For these batches, compute the minimal processing time as well.
+            </summary>
+            <param name="smallJobs"></param>
+            <param name="mediumJobs"></param>
+            <param name="machines"></param>
+            <param name="maxCap"></param>
+            <returns>(minimum number of batches required, minimal batch processing time, list of eligible machines of batches)</returns>
+        </member>
         <member name="M:OvenSchedulingAlgorithm.InstanceChecker.LowerBoundsCalculator.GetBoundsSmallJobsCompProcTimes(System.Collections.Generic.IEnumerable{OvenSchedulingAlgorithm.Interface.IJob},System.Int32)">
             <summary>
             Given a set of small jobs, a dictionary of machines together with the overall max machine capacity, 

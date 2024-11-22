@@ -47,15 +47,17 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
                     //add info to string: current job cannot be scheduled
                     greedyInfo += "Job with Id " + job.Id + " cannot be scheduled \n";
                 }
-                else if (bestAssignmentForJob.AssignedBatch.EndTime > job.LatestEnd)
-                {
-                    tardyJobs += 1;
-                    Console.WriteLine("Job with Id " + job.Id + " always finishes late \n");
-                    //Console.WriteLine("Earliest end time: " + bestAssignmentForJob.AssignedBatch.EndTime);
+                //TODO put back
+                //else if (bestAssignmentForJob.AssignedBatch.EndTime > job.LatestEnd)
+                //{
+                //    tardyJobs += 1;
 
-                    //add info to string: current job cannot be scheduled
-                    greedyInfo += "Job with Id " + job.Id + " always finishes late \n";
-                }
+                //    Console.WriteLine("Job with Id " + job.Id + " always finishes late \n");
+                //    //Console.WriteLine("Earliest end time: " + bestAssignmentForJob.AssignedBatch.EndTime);
+
+                //    //add info to string: current job cannot be scheduled
+                //    greedyInfo += "Job with Id " + job.Id + " always finishes late \n";
+                //}
                 
             }
 

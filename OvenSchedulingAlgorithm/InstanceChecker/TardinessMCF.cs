@@ -188,7 +188,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
                 }
 
                 int supply = machineCapacity * nBatches;
-                supplies[machineIntervalNode.Key-1] = -supply;
+                supplies[machineIntervalNode.Key-1] = -supply; //TODO Francesca something wrong here with the indices
             }
 
             int dummySupply = supplies.Sum();
