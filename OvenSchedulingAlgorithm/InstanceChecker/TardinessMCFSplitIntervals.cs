@@ -71,7 +71,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
                     //       2               2       16 --> (10 + (2-1)*3 + 2 + 1)
                     machineIntervals = machineIntervals + 1;
                     int nodeId = instance.Jobs.Count + (machineId - 1) * instance.Machines[machineId].AvailabilityStart.Count + shiftId + 1;
-                    machineIntervalNodeAssignedJobs.Add(nodeId, new SortedSet<int>());
+                    machineIntervalNodeAssignedJobs.Add(nodeId, new SortedSet<int>()); //TODO Francesca: error "An item with the same key has already been added."
                     machineIntervalNodeMinSetupAndProcessingTime.Add(nodeId, maxMinTime);
                     int lengthInterval = (int)
                     System.Math.Abs((instance.Machines[machineId].AvailabilityEnd[shiftId] - instance.Machines[machineId].AvailabilityStart[shiftId]).TotalSeconds);
