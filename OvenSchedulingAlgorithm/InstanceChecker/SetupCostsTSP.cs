@@ -252,13 +252,17 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
 
 
 
-            //check if triangle inequality holds for all triples
+            //check if triangle inequality holds for all triples i, j, k (i=j allowed)
             for (int i = 0; i < a; i++)
             {
-                for (int j = i+1; j < a; j++) 
-                {                        
-                     for (int k = j+1; k < a; k++) 
+                for (int j = 0; j < a; j++)
+                {
+                    for (int k = 0; k < a; k++) if (k != i & k != j)
                     {
+                        //for (int j = i; j < a; j++) 
+                        //{                        
+                        //     for (int k = j+1; k < a; k++) 
+                        //    {
                         int ij = correctedSetupCosts[i, j];
                         int ik = correctedSetupCosts[i, k];
                         int jk = correctedSetupCosts[j, k];
