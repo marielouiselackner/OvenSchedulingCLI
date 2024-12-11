@@ -52,7 +52,8 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             //bounds on setup costs based on TSP model
             DateTime beforeSetupCosts = DateTime.Now;
             int lowerBoundTotalSetupCosts = (int)SetupCostsTSP.ComputeLowerBoundSetupCostsWithTSP(instance, eligMachBatches);
-            //CalculateSimpleLowerBoundSetupCost(instance, eligMachBatches);
+            int simple = CalculateSimpleLowerBoundSetupCost(instance, eligMachBatches);
+            lowerBoundTotalSetupCosts = Math.Max(lowerBoundTotalSetupCosts, simple);
             DateTime afterSetupCosts = DateTime.Now;
             TimeSpan setupCostsRuntimeLowerBounds = afterSetupCosts - beforeSetupCosts;
 
@@ -87,7 +88,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
                 lowerBoundTotalSetupCosts,
                 lowerBoundTardyJobs,
                 instanceData.LowerBoundTardyJobs,
-                0,
+                (int)components.IntegerObjectiveValue,
                 components.ObjectiveValue,
                 upperBoundAverageNumberOfJobsPerBatch,
                 upperBoundRuntimeReduction,
@@ -158,6 +159,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             int lowerBoundAtt = 0;
             int minProcTimeSeconds = 0;
             IList<(int, IList<int>)> eligibleMachBatches = new List<(int, IList<int>)>();
+
             //jobs with the given attribute Id 
             //note: we assume that attributes are the same on all machines
             var jobsAtt = instance.Jobs.Where(j => j.AttributeIdPerMachine.FirstOrDefault().Value == attributeId);
@@ -170,6 +172,8 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             int maxCap = instance.Machines.Select(m => m.Value.MaxCap).Max();
             for (int k = 0; k < maxCap / 2 + 1; k++)
             {
+                IList<(int, IList<int>)> currentEligibleMachBatches = new List<(int, IList<int>)>();
+
                 //jobs that are so large that eligible machine with maximal machine capacity 
                 //cannot process any other jobs from N1, N2, N3 at the same time
                 List<IJob> N_1 = jobsAtt
@@ -180,7 +184,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
                 foreach (var job in N_1)
                 {
                     minProcTimeSeconds += job.MinTime;
-                    eligibleMachBatches.Add((attributeId, job.EligibleMachines));
+                    currentEligibleMachBatches.Add((attributeId, job.EligibleMachines));
                 }
 
                 List<IJob> N_2 = jobsAtt.Where(j => j.Size <= maxCap - k && j.Size > maxCap / 2).ToList();
@@ -197,8 +201,9 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
                     minProcTimeSeconds = boundsSmallMediumJobsEligMachines.minProcTimeSeconds;
                     for (int i = 0; i < boundsSmallMediumJobsEligMachines.eligibleMachBatches.Count; i++)
                     {
-                        eligibleMachBatches.Add((attributeId, boundsSmallMediumJobsEligMachines.eligibleMachBatches[i]));
+                        currentEligibleMachBatches.Add((attributeId, boundsSmallMediumJobsEligMachines.eligibleMachBatches[i]));
                     }
+                    eligibleMachBatches = currentEligibleMachBatches;
                 }              
             }
 

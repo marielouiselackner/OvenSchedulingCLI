@@ -62,12 +62,17 @@ namespace OvenSchedulingAlgorithm.Objective.Implementation
         /// <summary>
         /// The aggregated normalised objective value of the solution (between 0 and 1)
         /// </summary>
-        public double ObjectiveValue { get; }        
+        public double ObjectiveValue { get; }
+
+        /// <summary>
+        /// The aggregated integer objective value of the solution 
+        /// </summary>
+        public long IntegerObjectiveValue { get; }
 
         public ObjectiveComponents(double totalRuntimeSeconds, double weightedTotalRuntime,
             int totalSetupTimesSeconds, double weightedTotalSetupTimes, int totalSetupCosts, double weightedTotalSetupCosts,
             int finishedTooLate, double weightedFinishedTooLate,
-            int numberOfUnscheduledJobs, IDictionary<int, IJob> unscheduledJobs, double objectiveValue)
+            int numberOfUnscheduledJobs, IDictionary<int, IJob> unscheduledJobs, double objectiveValue, long integerObjectiveValue)
         {
             TotalRuntimeSeconds = totalRuntimeSeconds;
             WeightedTotalRuntime = weightedTotalRuntime;
@@ -80,6 +85,8 @@ namespace OvenSchedulingAlgorithm.Objective.Implementation
             NumberOfUnscheduledJobs = numberOfUnscheduledJobs;
             UnscheduledJobs = unscheduledJobs;
             ObjectiveValue = objectiveValue;
+            IntegerObjectiveValue = integerObjectiveValue;
+
         }
 
     }

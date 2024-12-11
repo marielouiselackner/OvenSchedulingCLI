@@ -64,5 +64,10 @@ namespace OvenSchedulingAlgorithm.Objective
         /// The aggregated normalised objective value of the solution (between 0 and 1)
         /// </summary>
         double ObjectiveValue { get; }
+
+        /// <summary>
+        /// The aggregated integer objective value of the solution 
+        /// </summary>
+        long IntegerObjectiveValue { get; }
     }
 }

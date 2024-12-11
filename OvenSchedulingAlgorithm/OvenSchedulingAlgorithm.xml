@@ -2007,6 +2007,11 @@
             The aggregated normalised objective value of the solution (between 0 and 1)
             </summary>
         </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.Implementation.ObjectiveComponents.IntegerObjectiveValue">
+            <summary>
+            The aggregated integer objective value of the solution 
+            </summary>
+        </member>
         <member name="T:OvenSchedulingAlgorithm.Objective.Implementation.ObjectiveWriter">
             <summary>
             Breaks down the objective of a solution of an oven scheduling problem into smaller intervals and into machines
@@ -2168,6 +2173,11 @@
         <member name="P:OvenSchedulingAlgorithm.Objective.IObjectiveComponents.ObjectiveValue">
             <summary>
             The aggregated normalised objective value of the solution (between 0 and 1)
+            </summary>
+        </member>
+        <member name="P:OvenSchedulingAlgorithm.Objective.IObjectiveComponents.IntegerObjectiveValue">
+            <summary>
+            The aggregated integer objective value of the solution 
             </summary>
         </member>
         <member name="T:OvenSchedulingAlgorithm.Objective.IObjectiveWriter">

@@ -110,7 +110,6 @@ namespace OvenSchedulingAlgorithm.Objective.Implementation
             _delta_Tardiness = weights.WeightTardiness;
         }
 
-        //TODO add method CalculateObjectiveInteger()?
 
         /// <summary>
         /// From an instance and a solution to the oven scheduling problem as well as the weights used for optimization, 
@@ -161,6 +160,8 @@ namespace OvenSchedulingAlgorithm.Objective.Implementation
                 + _delta_Tardiness * normalizedFinishedTooLate)
                 / (n * (_alpha_Runtime + _beta_SetupTimes + _gamma_SetupCosts + _delta_Tardiness));
 
+            long integerObjective = (int) (objective * _instanceData.UpperBoundForIntegerObjective);
+
             IObjectiveComponents objectiveValue = new ObjectiveComponents(
                 totalRuntimeSeconds,
                 _alpha_Runtime * normalizedTotalRuntime,
@@ -172,7 +173,8 @@ namespace OvenSchedulingAlgorithm.Objective.Implementation
                 _delta_Tardiness * normalizedFinishedTooLate,
                 unscheduledJobs.Count,
                 unscheduledJobs,
-                objective
+                objective,
+                integerObjective
                 );
 
             return objectiveValue;

@@ -52,7 +52,7 @@ namespace OvenSchedulingAlgorithmCLI
         [Option("wSC", Default = 1, HelpText = "Weight used for the objective total setup costs")]
         public int weightSetupCosts { get; set; }
 
-        [Option("wT", Default = 0, HelpText = "Weight used for the objective number of tardy jobs")]
+        [Option("wT", Default = 100, HelpText = "Weight used for the objective number of tardy jobs")]
         public int weightTardiness { get; set; }
 
         [Option('c', Default = false, HelpText = "Convert to MiniZinc instance")]
