@@ -86,17 +86,30 @@ namespace OvenSchedulingAlgorithmCLI
                     instanceFileNameForWarmStartFile = instanceFileNameForWarmStartFile.Substring(0, index);
                 }
 
-                string warmStartFilename = "./warm_start_" + instanceFileNameForWarmStartFile;
-                if (opts.ConvertInstanceToCPOptimizer)
+                
+                if (!opts.ConvertInstanceToCPOptimizer)
                 {
-                    warmStartFilename += ".dat";
+                    string warmStartFilename = "./warm_start_" + instanceFileNameForWarmStartFile + ".dzn";
+                    File.WriteAllText(warmStartFilename, warmStartInput);
                 }
                 else
                 {
-                    warmStartFilename += ".dzn";
+                    //CP Optimizer format: instance and warmstart info are in the same file
+                    string warmStartInstanceCPOptFormat = miniZincConverter.ConvertToMiniZincInstance(warmStartInstance, weights, 
+                    opts.ConvertInstanceToCPOptimizer, opts.SpecialCaseLexicographicWeights);
+
+                    if (opts.IncludeLowerBoundExactModel)
+                    {
+                        IOutput upperBoundSolution = Output.DeserializeSolution(opts.UpperBoundSolutionFile);
+                        LowerBounds lowerBounds = LowerBounds.Deserialize(opts.LowerBoundInstanceFile);
+                        warmStartInstanceCPOptFormat += miniZincConverter.BoundsForMiniZincInstance(warmStartInstance, weights,
+                            upperBoundSolution, lowerBounds);
+                    }
+                    warmStartInstanceCPOptFormat += warmStartInput;
+                    string warmStartFilename = "./warm_start_" + instanceFileNameForWarmStartFile + ".dat";
+                    File.WriteAllText(warmStartFilename, warmStartInstanceCPOptFormat);
                 }
-                
-                File.WriteAllText(warmStartFilename, warmStartInput);
+
                 return;
             }
 
@@ -196,8 +209,15 @@ namespace OvenSchedulingAlgorithmCLI
                     {
                         InstanceFileName += opts.dznFileName + ".dzn";
                     }
-                }                
-                
+                }
+
+                if (opts.IncludeLowerBoundExactModel)
+                {
+                    IOutput upperBoundSolution = Output.DeserializeSolution(opts.UpperBoundSolutionFile);
+                    LowerBounds lowerBounds = LowerBounds.Deserialize(opts.LowerBoundInstanceFile);
+                    instanceFileContents += miniZincConverter.BoundsForMiniZincInstance(instance, weights,upperBoundSolution, lowerBounds);
+                }
+
                 File.WriteAllText(InstanceFileName, instanceFileContents);
             }
 

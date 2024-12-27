@@ -17,7 +17,7 @@ namespace OvenSchedulingAlgorithm.Objective
         /// calculate the components of the objective and the real-valued objective value of the solution (value between 0 and 1)
         /// </summary>
         /// <returns>The IObjectiveValue object associated with the solution and weights</returns>
-        IObjectiveComponents CalculateComponentsObjectiveReal();
+        IObjectiveComponents CalculateComponentsObjective();
 
         /// <summary>
         /// Find all jobs of the instance that have not been assigned 

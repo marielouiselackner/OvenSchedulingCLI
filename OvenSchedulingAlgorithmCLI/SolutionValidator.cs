@@ -93,7 +93,7 @@ namespace OvenSchedulingAlgorithmCLI
             //calculate objective value
             CalculateObjective objectiveCalculator = new CalculateObjective(_instance, _solution,
                 _setupDict, _algoconfig);
-            var objResult = objectiveCalculator.CalculateComponentsObjectiveReal();
+            var objResult = objectiveCalculator.CalculateComponentsObjective();
 
             //total runtime of ovens (in seconds)
             double totalRuntime = objResult.TotalRuntimeSeconds;
@@ -159,7 +159,7 @@ namespace OvenSchedulingAlgorithmCLI
             //calculate objective value
             CalculateObjective objectiveCalculator = new CalculateObjective(_instance, _solution,
                 _setupDict, _algoconfig);
-            var objResult = objectiveCalculator.CalculateComponentsObjectiveReal();
+            var objResult = objectiveCalculator.CalculateComponentsObjective();
 
             //total runtime of ovens (in seconds)
             double totalRuntime = objResult.TotalRuntimeSeconds;

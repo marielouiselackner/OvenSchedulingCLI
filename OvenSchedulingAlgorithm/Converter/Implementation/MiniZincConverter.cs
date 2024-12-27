@@ -4,10 +4,12 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Google.OrTools.ModelBuilder;
 using OvenSchedulingAlgorithm.Algorithm;
 using OvenSchedulingAlgorithm.InstanceChecker;
 using OvenSchedulingAlgorithm.Interface;
 using OvenSchedulingAlgorithm.Interface.Implementation;
+using OvenSchedulingAlgorithm.Objective.Implementation;
 using Attribute = OvenSchedulingAlgorithm.Interface.Implementation.Attribute;
 
 namespace OvenSchedulingAlgorithm.Converter.Implementation
@@ -78,6 +80,15 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
         private const string CONSTANT_FOR_TDE = "constant_for_TDE=";
         private const string TDE_BOUND = "TDE_bound=";
         private const string TDS_BOUND = "TDS_bound=";
+        //constants for lower bounds
+        private const string UP_GREEDY_INT = "upper_bound_greedy_integer_objective=";
+        private const string LB_INT = "lower_bound_integer_objective=";
+        private const string LB_BATCHCOUNT = "lower_bound_batch_count=";
+        private const string LB_TOTALRUNTIME = "lower_bound_total_runtime=";
+        private const string LB_TARDY = "lower_bound_finished_toolate=";
+        private const string LB_SC = "lower_bound_total_setupcosts=";
+        private const string UB_BATCHCOUNT = "upper_bound_batch_count=[";
+        private const string UB_BATCHCOUNT_END = "]";
 
         // Constants for CP Optimizer identifier names
         private const string cpL = "LengthSchedulingHorizon=";
@@ -1663,6 +1674,57 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
             return instance;
         }
 
+        public string BoundsForMiniZincInstance(IInstance instance, IWeightObjective weights, IOutput upperBoundSolution, LowerBounds lowerBounds)
+        {
+            //create same string for Minizinc and CP Optimizer data file
+
+            //calculate objective components for upper Bound Solution
+            CalculateObjective calculateObjective = new CalculateObjective(instance, upperBoundSolution, weights);
+            //compute integer objective of upper bound solution, ie upper bound on integer objective
+            var bla = calculateObjective.CalculateComponentsObjective();
+            int objectiveValue = (int)bla.IntegerObjectiveValue;
+
+            string fileContents = UP_GREEDY_INT + objectiveValue.ToString(CultureInfo.InvariantCulture) + MZN_LINE_END + "\n";
+
+            //integer objective lower bound
+            int lowerBoundIntObjective = lowerBounds.LowerBoundIntObjective;
+            fileContents += LB_INT + lowerBoundIntObjective + MZN_LINE_END + "\n";
+            //lower bound on int obj was previously not calculated, so need to redo these calculations here
+            //fileContents += LB_INT + lowerBounds.LowerBoundIntObjective.ToString(CultureInfo.InvariantCulture) + MZN_LINE_END + "\n";
+            fileContents += LB_BATCHCOUNT + lowerBounds.LowerBoundBatchCount.ToString(CultureInfo.InvariantCulture) + MZN_LINE_END + "\n";
+            fileContents += LB_TOTALRUNTIME + lowerBounds.LowerBoundTotalRuntimeMinutes.ToString(CultureInfo.InvariantCulture) + MZN_LINE_END + "\n";
+            fileContents += LB_TARDY + lowerBounds.LowerBoundTardyJobs.ToString(CultureInfo.InvariantCulture) + MZN_LINE_END + "\n";
+            fileContents += LB_SC + lowerBounds.LowerBoundTotalSetupCosts.ToString(CultureInfo.InvariantCulture) + MZN_LINE_END + "\n";
+
+            //count numbver of jobs that can be processed on every machine
+            SortedDictionary<int, int> numberOfJobsEligiblePerMachine = new SortedDictionary<int, int>();
+            foreach (IJob job in instance.Jobs)
+            {
+                for (int m = 0; m < job.EligibleMachines.Count; m++)
+                {
+
+                    int machId = job.EligibleMachines[m];
+
+                    if (!numberOfJobsEligiblePerMachine.ContainsKey(machId))
+                    {
+                        numberOfJobsEligiblePerMachine[machId] = 1;
+                    }
+                    else
+                    {
+                        numberOfJobsEligiblePerMachine[machId]++;
+                    }
+                }
+            }
+            string batchCountString = UB_BATCHCOUNT;
+            foreach (var entry in numberOfJobsEligiblePerMachine)
+            {
+                batchCountString += entry.Value.ToString(CultureInfo.InvariantCulture) + ',';
+            }
+            fileContents += batchCountString.TrimEnd(',', '\n', '|') + UB_BATCHCOUNT_END + MZN_LINE_END + "\n";
+
+            return fileContents;
+
+        }
 
     }
 }

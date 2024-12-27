@@ -68,7 +68,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             IOutput solution = new Output();
             CalculateObjective calcObjective = new CalculateObjective(instance, solution, config.WeightsObjective, instanceData);
             IObjectiveComponents components = calcObjective.CalculateObjectiveFromComponents(
-                lowerBoundTotalRuntimeMinutes * 60, //needed in seconds
+                lowerBoundTotalRuntimeSeconds, //needed in seconds
                 lowerBoundTotalSetupTimesMinutes * 60, //needed in seconds
                 lowerBoundTotalSetupCosts,
                 instanceData.LowerBoundTardyJobs,
@@ -173,6 +173,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             for (int k = 0; k < maxCap / 2 + 1; k++)
             {
                 IList<(int, IList<int>)> currentEligibleMachBatches = new List<(int, IList<int>)>();
+                int currentMinProcTimeSeconds = 0;
 
                 //jobs that are so large that eligible machine with maximal machine capacity 
                 //cannot process any other jobs from N1, N2, N3 at the same time
@@ -183,7 +184,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
                 int minbatchCount = N_1.Count();
                 foreach (var job in N_1)
                 {
-                    minProcTimeSeconds += job.MinTime;
+                    currentMinProcTimeSeconds += job.MinTime;
                     currentEligibleMachBatches.Add((attributeId, job.EligibleMachines));
                 }
 
@@ -198,12 +199,13 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
                 if (minbatchCount + boundsSmallMediumJobsEligMachines.minbatchCount > lowerBoundAtt)
                 {
                     lowerBoundAtt = minbatchCount + boundsSmallMediumJobsEligMachines.minbatchCount;
-                    minProcTimeSeconds = boundsSmallMediumJobsEligMachines.minProcTimeSeconds;
+                    currentMinProcTimeSeconds += boundsSmallMediumJobsEligMachines.minProcTimeSeconds;
                     for (int i = 0; i < boundsSmallMediumJobsEligMachines.eligibleMachBatches.Count; i++)
                     {
                         currentEligibleMachBatches.Add((attributeId, boundsSmallMediumJobsEligMachines.eligibleMachBatches[i]));
                     }
                     eligibleMachBatches = currentEligibleMachBatches;
+                    minProcTimeSeconds = currentMinProcTimeSeconds;
                 }              
             }
 

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Google.OrTools.ModelBuilder;
 using OvenSchedulingAlgorithm.Algorithm;
+using OvenSchedulingAlgorithm.InstanceChecker;
 using OvenSchedulingAlgorithm.Interface;
 
 namespace OvenSchedulingAlgorithm.Converter
@@ -25,6 +27,9 @@ namespace OvenSchedulingAlgorithm.Converter
         string ConvertToMiniZincInstance(IInstance instance, IWeightObjective weights, 
             bool convertToCPOptimizer = false, 
             bool specialCaseLexicographicOptimization = false);
+
+     
+        public string BoundsForMiniZincInstance(IInstance instance, IWeightObjective weights, IOutput upperBoundSolution, LowerBounds lowerBounds);
 
         /// <summary>
         /// Take a (partial) initial solution and convert it into a MiniZinc additional instance file content

@@ -630,6 +630,12 @@
             </summary>
             <param name="fileName">Location of the serialized filed</param>
         </member>
+        <member name="M:OvenSchedulingAlgorithm.InstanceChecker.LowerBounds.Deserialize(System.String)">
+            <summary>
+            Create a lower bounds object based on a serialized Object
+            </summary>
+            <param name="fileName">File location storing the serialized lower bounds.</param>
+        </member>
         <member name="M:OvenSchedulingAlgorithm.InstanceChecker.LowerBoundsCalculator.CalculateLowerBounds(OvenSchedulingAlgorithm.Interface.IInstance,OvenSchedulingAlgorithm.InstanceChecker.InstanceData,OvenSchedulingAlgorithm.Interface.IAlgorithmConfig)">
             <summary>
             Calculates lower bounds on the value of the objective function for a given instance
@@ -1850,7 +1856,7 @@
             </summary>
             
         </member>
-        <member name="M:OvenSchedulingAlgorithm.Objective.ICalculateObjective.CalculateComponentsObjectiveReal">
+        <member name="M:OvenSchedulingAlgorithm.Objective.ICalculateObjective.CalculateComponentsObjective">
             <summary>
             From an instance and a solution to the oven scheduling problem as well as the weights used for optimization, 
             calculate the components of the objective and the real-valued objective value of the solution (value between 0 and 1)
@@ -1903,7 +1909,7 @@
             <param name="solution"></param>
             <param name="weights"></param>
         </member>
-        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.CalculateObjective.CalculateComponentsObjectiveReal">
+        <member name="M:OvenSchedulingAlgorithm.Objective.Implementation.CalculateObjective.CalculateComponentsObjective">
             <summary>
             From an instance and a solution to the oven scheduling problem as well as the weights used for optimization, 
             calculate the components of the objective and the real-valued objective value of the solution (value between 0 and 1).

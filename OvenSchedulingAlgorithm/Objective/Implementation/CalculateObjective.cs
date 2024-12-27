@@ -117,7 +117,7 @@ namespace OvenSchedulingAlgorithm.Objective.Implementation
         /// Note: times involved in objective components are in minutes (in order to be compatible with mzn calculations)
         /// </summary>
         /// <returns>The IObjectiveValue object associated with the solution and weights</returns>
-        public IObjectiveComponents CalculateComponentsObjectiveReal()
+        public IObjectiveComponents CalculateComponentsObjective()
         {
             //Note: times involved are in seconds (are converted to min later on)
             double totalRuntime = CalculateTotalProcessingTime();

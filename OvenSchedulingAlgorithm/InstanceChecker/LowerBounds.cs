@@ -146,5 +146,22 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
             }
         }
 
+        /// <summary>
+        /// Create a lower bounds object based on a serialized Object
+        /// </summary>
+        /// <param name="fileName">File location storing the serialized lower bounds.</param>
+        public static LowerBounds Deserialize(string fileName)
+        {
+            // deserialize JSON directly from a file
+            StreamReader streamReader = File.OpenText(fileName);
+
+            JsonSerializer serializer = new JsonSerializer { TypeNameHandling = TypeNameHandling.Objects };
+            LowerBounds lowerBounds =
+                (LowerBounds)serializer.Deserialize(streamReader, typeof(LowerBounds));
+            streamReader.Close();
+
+            return lowerBounds;
+        }
+
     }
 }

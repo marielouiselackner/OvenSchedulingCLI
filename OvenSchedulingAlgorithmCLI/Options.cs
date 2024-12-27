@@ -143,6 +143,16 @@ namespace OvenSchedulingAlgorithmCLI
         [Option("lBF", Default = "", HelpText = "Filename without ending for the calculated lower bounds")]
         public string lBFileName { get; set; }
 
+        [Option("cILB", Default = false, HelpText = "When converting instance, include lower and upper bounds into the MiniZInc or CP Optimizer input data. " +
+            "Lower and upper bounds are provided by .json files")]
+        public bool IncludeLowerBoundExactModel { get; set; }
+
+        [Option("LBI", Default = "", HelpText = "Lower bound instance file")]
+        public string LowerBoundInstanceFile { get; set; }
+
+        [Option("UBS", Default = "", HelpText = "Upper bound solution file")]
+        public string UpperBoundSolutionFile { get; set; }
+
         [Option("iP", Default = false, HelpText = "Calculate instance parameters", SetName = "solve")]
         public bool CalculateInstanceParams { get; set; }
 
