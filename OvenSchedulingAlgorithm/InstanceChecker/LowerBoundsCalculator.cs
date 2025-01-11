@@ -175,7 +175,7 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
                 IList<(int, IList<int>)> currentEligibleMachBatches = new List<(int, IList<int>)>();
                 int currentMinProcTimeSeconds = 0;
 
-                //jobs that are so large that eligible machine with maximal machine capacity 
+                //jobs that are so large that machine with maximal machine capacity 
                 //cannot process any other jobs from N1, N2, N3 at the same time
                 List<IJob> N_1 = jobsAtt
                     .Where(j => j.Size > maxCap - k)
@@ -199,14 +199,17 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
                 if (minbatchCount + boundsSmallMediumJobsEligMachines.minbatchCount > lowerBoundAtt)
                 {
                     lowerBoundAtt = minbatchCount + boundsSmallMediumJobsEligMachines.minbatchCount;
-                    currentMinProcTimeSeconds += boundsSmallMediumJobsEligMachines.minProcTimeSeconds;
                     for (int i = 0; i < boundsSmallMediumJobsEligMachines.eligibleMachBatches.Count; i++)
                     {
                         currentEligibleMachBatches.Add((attributeId, boundsSmallMediumJobsEligMachines.eligibleMachBatches[i]));
                     }
                     eligibleMachBatches = currentEligibleMachBatches;
+                }
+                if (currentMinProcTimeSeconds + boundsSmallMediumJobsEligMachines.minProcTimeSeconds > minProcTimeSeconds)
+                {
+                    currentMinProcTimeSeconds += boundsSmallMediumJobsEligMachines.minProcTimeSeconds;
                     minProcTimeSeconds = currentMinProcTimeSeconds;
-                }              
+                }
             }
 
             return (lowerBoundAtt, minProcTimeSeconds, eligibleMachBatches);
@@ -350,27 +353,47 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
                 }
             }
 
+            var result = (minbatchCount, minProcTimeSeconds, eligibleMachBatches);
+
             //compare lower bound with bound
-            //based on bin packing bound from Martello and Toth + eligibel machines
+            //based on bin packing bound from Martello and Toth + eligible machines
             var boundsBinPackingEligMachines = CalculateLowerBoundBinPackingEligMachineAttribute(instance, attributeId);
             if (minbatchCount < boundsBinPackingEligMachines.lowerBoundAtt)
             {
 #if DEBUG
                 bestBound = "bin packing + eligible machines";
-                Console.WriteLine("Best bound for attribute {0} found by {1}", attributeId, bestBound);
+                Console.WriteLine("Best bound on the number of batches for attribute {0} found by {1}", attributeId, bestBound);                
 #else
 #endif
-                return boundsBinPackingEligMachines;
+                result.minbatchCount = boundsBinPackingEligMachines.lowerBoundAtt;
+                result.eligibleMachBatches = boundsBinPackingEligMachines.eligibleMachBatches;
             }
             else
             {
 #if DEBUG
-                Console.WriteLine("Best bound for attribute {0} found by {1}", attributeId, bestBound);
+                Console.WriteLine("Best bound on the number of batches for attribute {0} found by {1}", attributeId, bestBound);
 #else
 #endif
-                return (minbatchCount, minProcTimeSeconds, eligibleMachBatches);
             }
-            
+            if (minProcTimeSeconds < boundsBinPackingEligMachines.minProcTimeSeconds)
+            {
+#if DEBUG
+                bestBound = "bin packing + eligible machines";
+                Console.WriteLine("Best bound on the batch processing time for attribute {0} found by {1}", attributeId, bestBound);                
+#else
+#endif
+                result.minProcTimeSeconds = boundsBinPackingEligMachines.minProcTimeSeconds;
+            }
+            else
+            {
+#if DEBUG
+                Console.WriteLine("Best bound on the batch processing time for attribute {0} found by {1}", attributeId, bestBound);
+#else
+#endif
+            }
+
+            return result;
+
         }
 
         /// <summary>
@@ -558,13 +581,16 @@ namespace OvenSchedulingAlgorithm.InstanceChecker
                     int freeCapacityThisMachine = Math.Max(remainingCapacityAfterAddingSmallJobs,0) + batchBoundInt * machines[machine].MaxCap - smallJobsNotFitting;
                     totalFreeCapacity += freeCapacityThisMachine;
 
-
+                    //batch processing times
+                    minProcTimeSeconds += mediumJobsThisMachine.Select(j => j.MinTime).Sum();
                     //list of all minimal processing times of jobs that need to be processed on this machine 
-                    var allProcTimesThisMachine = smallJobsThisMachine.Select(j => j.MinTime).ToList()
-                        .Concat(mediumJobsThisMachine.Select(j => j.MinTime).ToList()).ToList();
+                    var allProcTimesThisMachine = smallJobsThisMachine.Select(j => j.MinTime).ToList();
                     allProcTimesThisMachine.Sort();
                     //add batchBoundInt many proc times to list of proc times
-                    procTimes.Add(allProcTimesThisMachine.Max());
+                    if (allProcTimesThisMachine.Count > 0)
+                    {
+                        procTimes.Add(allProcTimesThisMachine.Max());
+                    }                    
                     for (int i = 0; i < batchBoundInt - 1; i++)
                     {
                         procTimes.Add(allProcTimesThisMachine[i]);

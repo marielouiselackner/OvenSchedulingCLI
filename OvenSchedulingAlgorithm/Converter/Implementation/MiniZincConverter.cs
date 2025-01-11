@@ -1681,8 +1681,8 @@ namespace OvenSchedulingAlgorithm.Converter.Implementation
             //calculate objective components for upper Bound Solution
             CalculateObjective calculateObjective = new CalculateObjective(instance, upperBoundSolution, weights);
             //compute integer objective of upper bound solution, ie upper bound on integer objective
-            var bla = calculateObjective.CalculateComponentsObjective();
-            int objectiveValue = (int)bla.IntegerObjectiveValue;
+            var objComponents = calculateObjective.CalculateComponentsObjective();
+            int objectiveValue = (int)objComponents.IntegerObjectiveValue;
 
             string fileContents = UP_GREEDY_INT + objectiveValue.ToString(CultureInfo.InvariantCulture) + MZN_LINE_END + "\n";
 

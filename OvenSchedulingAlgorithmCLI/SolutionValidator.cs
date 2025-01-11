@@ -116,6 +116,8 @@ namespace OvenSchedulingAlgorithmCLI
             //normalized objective
             double normalized_objective = objResult.ObjectiveValue;
             Console.WriteLine("The normalized weighted objective is {0} (value between 0 and 1)", normalized_objective);
+            long int_objective = objResult.IntegerObjectiveValue;
+            Console.WriteLine("The integer objective is {0} ", int_objective);
 
             //additional info about solution
             int b = _batches.Count();

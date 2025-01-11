@@ -160,7 +160,11 @@ namespace OvenSchedulingAlgorithm.Objective.Implementation
                 + _delta_Tardiness * normalizedFinishedTooLate)
                 / (n * (_alpha_Runtime + _beta_SetupTimes + _gamma_SetupCosts + _delta_Tardiness));
 
-            long integerObjective = (int) (objective * _instanceData.UpperBoundForIntegerObjective);
+            long integerObjective = (long)(_instanceData.MultFactorFinishedTooLate * finishedTooLate
+                + _instanceData.MultFactorTotalRuntime * totalRuntimeSeconds / 60
+                + _instanceData.MultFactorTotalSetupCosts * totalSetupCosts
+                + _instanceData.MultFactorTotalSetupTimes * totalSetupTimesSeconds / 60);
+                //(int) (objective * _instanceData.UpperBoundForIntegerObjective);
 
             IObjectiveComponents objectiveValue = new ObjectiveComponents(
                 totalRuntimeSeconds,

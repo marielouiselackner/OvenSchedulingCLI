@@ -94,7 +94,7 @@ namespace OvenSchedulingAlgorithm.Algorithm.SimpleGreedy.Implementation
             //parameters needed for the function FillBatch 
             //(which jobs do we consider when trying to fill up a batch/how far do we look ahead?)
             TimeSpan earliestStartSpan = maxEarliestStart.Subtract(minEarliestStart);
-            int maxTimeWindow = 1;
+            int maxTimeWindow = 5;
            
             //convert attribute IDs to 1..a
             IMiniZincConverter converter = new MiniZincConverter();
